@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import {
   getAuth,
@@ -40,6 +40,7 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Users,
   Plus,
   DollarSign,
@@ -67,8 +68,12 @@ import {
 import { BackgroundPaths } from './components/BackgroundPaths';
 import { ThemeToggle } from './components/ThemeToggle';
 import { SpeedInsights } from "@vercel/speed-insights/react"
+import { createTamagui, TamaguiProvider, View } from 'tamagui'
+import { config as defaultConfig } from '@tamagui/config/v3'
 
-// --- CONFIGURAÇÃO FIREBASE ---
+const config = createTamagui(defaultConfig)
+
+// --- CONFIGURAÃ‡ÃƒO FIREBASE ---
 // IMPORTANTE: Substitua JSON.parse(__firebase_config) pelas suas credenciais reais ao usar localmente.
 // Exemplo:
 // const firebaseConfig = {
@@ -76,7 +81,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react"
 //   authDomain: "seu-projeto.firebaseapp.com",
 //   ...
 // };
-// --- CONFIGURAÇÃO FIREBASE ---
+// --- CONFIGURAÃ‡ÃƒO FIREBASE ---
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -100,7 +105,7 @@ const LogoSVG = ({ className }) => (
     viewBox="0 0 1373.75 371.2"
     className={className}
     role="img"
-    aria-label="Conecta Português Logo"
+    aria-label="Conecta PortuguÃªs Logo"
   >
 
     <g id="Camada_1-2" data-name="Camada 1">
@@ -188,11 +193,11 @@ const seedDatabase = async (currentUserId) => {
   const quizzesRef = collection(db, 'artifacts', appId, 'public', 'data', 'quizzes');
 
   const users = [
-    { id: 'admin1', name: 'Diretor(a)', avatar: '👔', xp: 0, level: 99, coins: 0, password: 'admin', role: 'admin' },
-    { id: 'teacher1', name: 'Prof. Substituto', avatar: '👩‍🏫', xp: 0, level: 50, coins: 0, password: 'teacher', role: 'teacher' },
-    { id: 'st1', name: 'Ana Silva', avatar: '👩‍🔬', xp: 2450, level: 5, coins: 320, password: '1234', role: 'student', schoolYear: '9º Ano', userCode: 'ANA1234', photoUrl: '' },
-    { id: 'st2', name: 'João Pedro', avatar: '👨‍🎨', xp: 150, level: 1, coins: 5, password: '1234', role: 'student', schoolYear: '6º Ano', userCode: 'JOAO5678', photoUrl: '' },
-    { id: 'st3', name: 'Beatriz Costa', avatar: '👩‍🚀', xp: 1200, level: 3, coins: 150, password: '1234', role: 'student', schoolYear: '8º Ano', userCode: 'BEA9012', photoUrl: '' },
+    { id: 'admin1', name: 'Diretor(a)', avatar: 'ðŸ‘”', xp: 0, level: 99, coins: 0, password: 'admin', role: 'admin' },
+    { id: 'teacher1', name: 'Prof. Substituto', avatar: 'ðŸ‘©â€ðŸ«', xp: 0, level: 50, coins: 0, password: 'teacher', role: 'teacher' },
+    { id: 'st1', name: 'Ana Silva', avatar: 'ðŸ‘©â€ðŸ”¬', xp: 2450, level: 5, coins: 320, password: '1234', role: 'student', schoolYear: '9Âº Ano', userCode: 'ANA1234', photoUrl: '' },
+    { id: 'st2', name: 'JoÃ£o Pedro', avatar: 'ðŸ‘¨â€ðŸŽ¨', xp: 150, level: 1, coins: 5, password: '1234', role: 'student', schoolYear: '6Âº Ano', userCode: 'JOAO5678', photoUrl: '' },
+    { id: 'st3', name: 'Beatriz Costa', avatar: 'ðŸ‘©â€ðŸš€', xp: 1200, level: 3, coins: 150, password: '1234', role: 'student', schoolYear: '8Âº Ano', userCode: 'BEA9012', photoUrl: '' },
   ];
 
   for (const u of users) {
@@ -202,10 +207,10 @@ const seedDatabase = async (currentUserId) => {
   const classes = [
     {
       id: 'cl1',
-      title: 'Introdução à Gramática',
+      title: 'IntroduÃ§Ã£o Ã  GramÃ¡tica',
       classCode: 'AUL1001',
       date: '15/10 - 14:00',
-      description: 'Nossa primeira aula sobre a estrutura da língua portuguesa.',
+      description: 'Nossa primeira aula sobre a estrutura da lÃ­ngua portuguesa.',
       recordingLink: 'https://youtube.com/example',
       materials: [{ type: 'pdf', title: 'Slides da Aula 1.pdf' }],
       status: 'completed',
@@ -235,7 +240,7 @@ const seedDatabase = async (currentUserId) => {
   const quizzes = [
     {
       id: 'qz1',
-      title: 'Desafio Rápido: Substantivos',
+      title: 'Desafio RÃ¡pido: Substantivos',
       challengeCode: 'DES1001',
       xpReward: 100,
       coinReward: 10,
@@ -244,13 +249,13 @@ const seedDatabase = async (currentUserId) => {
       deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
       createdBy: 'Diretor(a)',
       questions: [
-        { type: 'multiple_choice', q: 'Qual destas palavras é um substantivo próprio?', options: ['cadeira', 'correr', 'Brasil', 'azul'], answer: 'Brasil' },
-        { type: 'multiple_choice', q: 'O plural de "pão" é:', options: ['pãos', 'pães', 'paões', 'panes'], answer: 'pães' }
+        { type: 'multiple_choice', q: 'Qual destas palavras Ã© um substantivo prÃ³prio?', options: ['cadeira', 'correr', 'Brasil', 'azul'], answer: 'Brasil' },
+        { type: 'multiple_choice', q: 'O plural de "pÃ£o" Ã©:', options: ['pÃ£os', 'pÃ£es', 'paÃµes', 'panes'], answer: 'pÃ£es' }
       ]
     },
     {
       id: 'qz2',
-      title: 'Mestre da Interpretação',
+      title: 'Mestre da InterpretaÃ§Ã£o',
       challengeCode: 'DES2045',
       xpReward: 300,
       coinReward: 25,
@@ -259,11 +264,11 @@ const seedDatabase = async (currentUserId) => {
       deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
       createdBy: 'Prof. Substituto',
       questions: [
-        { type: 'multiple_choice', q: 'No texto "O vento sussurrava nas árvores", qual figura de linguagem está presente?', options: ['Metáfora', 'Personificação', 'Hipérbole', 'Antítese'], answer: 'Personificação' },
-        { type: 'multiple_choice', q: 'Qual é o antônimo de "efêmero"?', options: ['Passageiro', 'Duradouro', 'Rápido', 'Breve'], answer: 'Duradouro' },
-        { type: 'multiple_choice', q: 'Em "Ele comeu dois pratos", temos um exemplo de:', options: ['Metonímia', 'Catacrese', 'Sinestesia', 'Pleonasmo'], answer: 'Metonímia' },
+        { type: 'multiple_choice', q: 'No texto "O vento sussurrava nas Ã¡rvores", qual figura de linguagem estÃ¡ presente?', options: ['MetÃ¡fora', 'PersonificaÃ§Ã£o', 'HipÃ©rbole', 'AntÃ­tese'], answer: 'PersonificaÃ§Ã£o' },
+        { type: 'multiple_choice', q: 'Qual Ã© o antÃ´nimo de "efÃªmero"?', options: ['Passageiro', 'Duradouro', 'RÃ¡pido', 'Breve'], answer: 'Duradouro' },
+        { type: 'multiple_choice', q: 'Em "Ele comeu dois pratos", temos um exemplo de:', options: ['MetonÃ­mia', 'Catacrese', 'Sinestesia', 'Pleonasmo'], answer: 'MetonÃ­mia' },
         { type: 'short_answer', q: 'Qual o sentimento predominante quando dizemos que estamos com "saudade"?', answer: 'Falta' },
-        { type: 'long_answer', q: 'Explique com suas palavras a moral da fábula "A Cigarra e a Formiga".', answer: 'A importância de trabalhar e se preparar para o futuro, não apenas se divertir.' }
+        { type: 'long_answer', q: 'Explique com suas palavras a moral da fÃ¡bula "A Cigarra e a Formiga".', answer: 'A importÃ¢ncia de trabalhar e se preparar para o futuro, nÃ£o apenas se divertir.' }
       ]
     },
     {
@@ -277,16 +282,16 @@ const seedDatabase = async (currentUserId) => {
       deadline: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
       createdBy: 'Diretor(a)',
       questions: [
-        { type: 'multiple_choice', q: 'Qual a forma correta?', options: ['Exceção', 'Eceção', 'Excessão', 'Excecão'], answer: 'Exceção' },
-        { type: 'multiple_choice', q: 'Complete: "Ele não fez ___ esforço."', options: ['nenhum', 'nem um', 'nehum', 'némum'], answer: 'nenhum' },
-        { type: 'multiple_choice', q: 'A palavra "ideia" tem acento?', options: ['Sim', 'Não', 'Depende', 'Às vezes'], answer: 'Não' },
+        { type: 'multiple_choice', q: 'Qual a forma correta?', options: ['ExceÃ§Ã£o', 'EceÃ§Ã£o', 'ExcessÃ£o', 'ExcecÃ£o'], answer: 'ExceÃ§Ã£o' },
+        { type: 'multiple_choice', q: 'Complete: "Ele nÃ£o fez ___ esforÃ§o."', options: ['nenhum', 'nem um', 'nehum', 'nÃ©mum'], answer: 'nenhum' },
+        { type: 'multiple_choice', q: 'A palavra "ideia" tem acento?', options: ['Sim', 'NÃ£o', 'Depende', 'Ã€s vezes'], answer: 'NÃ£o' },
         { type: 'short_answer', q: 'Escreva o aumentativo de "muro".', answer: 'Muralha' },
-        { type: 'long_answer', q: 'Crie uma frase usando corretamente as palavras "mas" e "mais".', answer: 'Eu queria ir, mas não tenho mais dinheiro.' }
+        { type: 'long_answer', q: 'Crie uma frase usando corretamente as palavras "mas" e "mais".', answer: 'Eu queria ir, mas nÃ£o tenho mais dinheiro.' }
       ]
     },
     {
       id: 'qz4',
-      title: 'Vocabulário Avançado',
+      title: 'VocabulÃ¡rio AvanÃ§ado',
       challengeCode: 'DES4102',
       xpReward: 400,
       coinReward: 40,
@@ -295,11 +300,11 @@ const seedDatabase = async (currentUserId) => {
       deadline: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
       createdBy: 'Diretor(a)',
       questions: [
-        { type: 'multiple_choice', q: 'O que significa a palavra "altruísta"?', options: ['Egoísta', 'Solidário', 'Rico', 'Alto'], answer: 'Solidário' },
-        { type: 'multiple_choice', q: 'Qual palavra é sinônimo de "contente"?', options: ['Triste', 'Alegre', 'Raivoso', 'Cansado'], answer: 'Alegre' },
-        { type: 'multiple_choice', q: 'Complete o provérbio: "Água mole em pedra dura..."', options: ['...tanto bate até que fura', '...nunca fura', '...molha tudo', '...vira rio'], answer: '...tanto bate até que fura' },
-        { type: 'short_answer', q: 'Qual é o substantivo coletivo de "lobos"?', answer: 'Alcateia' },
-        { type: 'long_answer', q: 'Defina o que é "Empatia" em uma frase.', answer: 'Capacidade de se colocar no lugar do outro.' }
+        { type: 'multiple_choice', q: 'O que significa a palavra "altruÃ­sta"?', options: ['EgoÃ­sta', 'SolidÃ¡rio', 'Rico', 'Alto'], answer: 'SolidÃ¡rio' },
+        { type: 'multiple_choice', q: 'Qual palavra Ã© sinÃ´nimo de "contente"?', options: ['Triste', 'Alegre', 'Raivoso', 'Cansado'], answer: 'Alegre' },
+        { type: 'multiple_choice', q: 'Complete o provÃ©rbio: "Ãgua mole em pedra dura..."', options: ['...tanto bate atÃ© que fura', '...nunca fura', '...molha tudo', '...vira rio'], answer: '...tanto bate atÃ© que fura' },
+        { type: 'short_answer', q: 'Qual Ã© o substantivo coletivo de "lobos"?', answer: 'Alcateia' },
+        { type: 'long_answer', q: 'Defina o que Ã© "Empatia" em uma frase.', answer: 'Capacidade de se colocar no lugar do outro.' }
       ]
     }
   ];
@@ -311,26 +316,33 @@ const seedDatabase = async (currentUserId) => {
   alert('Banco de dados atualizado!');
 };
 
-// --- COMPONENTES DE VISUALIZAÇÃO ---
+// --- COMPONENTES DE VISUALIZAÃ‡ÃƒO ---
 
-const ViewHome = ({ student, classes }) => {
+const ViewHome = ({ student, classes, onOpenRank }) => {
   const myClasses = classes.filter(c => !c.assignedTo || c.assignedTo.length === 0 || c.assignedTo.includes(student.id));
   const activeClass = myClasses.find(c => c.status === 'live') || myClasses.find(c => c.status === 'soon') || myClasses.find(c => c.status === 'locked');
 
   return (
     <div className="space-y-6 pb-20 md:pb-0">
-      <header className="flex justify-between items-end mb-6">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
         <div><h2 className="text-2xl font-bold text-slate-800 dark:text-white">Painel de Controle</h2><p className="text-slate-500 dark:text-slate-400">Bem-vindo de volta!</p></div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-3 bg-white dark:bg-slate-800 p-1 pr-4 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow cursor-default">
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            onClick={onOpenRank}
+            className="flex items-center gap-2 bg-[#a51a8f] hover:bg-[#8e167b] text-white px-4 py-2 rounded-full border border-[#a51a8f] shadow-sm h-12 transition-all active:scale-95"
+          >
+            <Trophy size={18} className="text-[#eec00a]" />
+            <span className="font-bold text-sm">Ranking</span>
+          </button>
+          <div className="flex items-center gap-2 bg-[#fff9db] dark:bg-yellow-900/30 px-4 py-2 rounded-full border border-[#eec00a] shadow-sm h-12 select-none"><Star className="w-5 h-5 text-[#eec00a] fill-[#eec00a]" /><span className="font-bold text-[#b89508] dark:text-[#eec00a]">{student.coins}</span></div>
+          <div className="flex items-center gap-3 bg-white dark:bg-slate-800 p-1 pr-4 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow cursor-default h-12">
             <div className="w-10 h-10 rounded-full bg-[#fdf2fa] dark:bg-slate-700 flex items-center justify-center text-xl border border-[#a51a8f]/20 overflow-hidden">{student.photoUrl ? <img src={student.photoUrl} alt={student.name} className="w-full h-full object-cover" /> : student.avatar}</div>
-            <div className="flex flex-col justify-center"><span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide leading-tight">Nível {student.level}</span><div className="w-20 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full mt-1 overflow-hidden"><div className="bg-[#a51a8f] h-full rounded-full transition-all duration-500" style={{ width: `${Math.min((student.xp % 1000) / 10, 100)}%` }}></div></div></div>
+            <div className="flex flex-col justify-center"><span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide leading-tight">NÃ­vel {student.level}</span><div className="w-20 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full mt-1 overflow-hidden"><div className="bg-[#a51a8f] h-full rounded-full transition-all duration-500" style={{ width: `${Math.min((student.xp % 1000) / 10, 100)}%` }}></div></div></div>
           </div>
-          <div className="flex items-center gap-2 bg-[#fff9db] dark:bg-yellow-900/30 px-4 py-2 rounded-full border border-[#eec00a] shadow-sm h-12"><Star className="w-5 h-5 text-[#eec00a] fill-[#eec00a]" /><span className="font-bold text-[#b89508] dark:text-[#eec00a]">{student.coins}</span></div>
         </div>
       </header>
       <section>
-        <h3 className="text-lg font-bold text-slate-700 mb-3 flex items-center gap-2">{activeClass?.status === 'live' ? <Radio className="w-5 h-5 text-red-500 animate-pulse" /> : activeClass?.status === 'soon' ? <Clock className="w-5 h-5 text-[#eec00a]" /> : <Video className="w-5 h-5 text-[#a51a8f]" />}{activeClass?.status === 'live' ? 'Acontecendo Agora' : 'Próxima Aula'}</h3>
+        <h3 className="text-lg font-bold text-slate-700 mb-3 flex items-center gap-2">{activeClass?.status === 'live' ? <Radio className="w-5 h-5 text-red-500 animate-pulse" /> : activeClass?.status === 'soon' ? <Clock className="w-5 h-5 text-[#eec00a]" /> : <Video className="w-5 h-5 text-[#a51a8f]" />}{activeClass?.status === 'live' ? 'Acontecendo Agora' : 'PrÃ³xima Aula'}</h3>
         {activeClass ? (
           <div className={`rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group transition-all duration-500 ${activeClass.status === 'live' ? 'bg-gradient-to-r from-[#a51a8f] to-[#7d126b] ring-4 ring-[#a51a8f]/20' : activeClass.status === 'soon' ? 'bg-gradient-to-r from-[#eec00a] to-[#d4ab09] text-yellow-900' : 'bg-gradient-to-r from-slate-700 to-slate-800'}`}>
             <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl transform translate-x-10 -translate-y-10 group-hover:scale-150 transition-transform duration-700"></div>
@@ -344,8 +356,8 @@ const ViewHome = ({ student, classes }) => {
         ) : (<div className="bg-white p-6 rounded-2xl border border-slate-200 text-center text-slate-500">Nenhuma aula agendada por enquanto.</div>)}
       </section>
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm"><h4 className="font-bold text-slate-700 mb-2 flex items-center gap-2"><Star className="w-5 h-5 text-[#eec00a]" />Destaque da Semana</h4><p className="text-sm text-slate-600">Parabéns ao aluno <strong>Lucas</strong> por completar todos os desafios de gramática!</p></div>
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm"><h4 className="font-bold text-slate-700 mb-2 flex items-center gap-2"><BookOpen className="w-5 h-5 text-blue-500" />Lembrete</h4><p className="text-sm text-slate-600">Não esqueçam de baixar o PDF da aula sobre "Verbos" na aba Jornada.</p></div>
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm"><h4 className="font-bold text-slate-700 mb-2 flex items-center gap-2"><Star className="w-5 h-5 text-[#eec00a]" />Destaque da Semana</h4><p className="text-sm text-slate-600">ParabÃ©ns ao aluno <strong>Lucas</strong> por completar todos os desafios de gramÃ¡tica!</p></div>
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm"><h4 className="font-bold text-slate-700 mb-2 flex items-center gap-2"><BookOpen className="w-5 h-5 text-blue-500" />Lembrete</h4><p className="text-sm text-slate-600">NÃ£o esqueÃ§am de baixar o PDF da aula sobre "Verbos" na aba Jornada.</p></div>
       </section>
     </div>
   );
@@ -371,7 +383,7 @@ const ViewJourney = ({ classes }) => {
                   <p className={`mb-4 ${isLive ? 'text-slate-600 dark:text-slate-300 text-base' : 'text-slate-500 dark:text-slate-400 text-sm'}`}>{cls.description}</p>
                   {!isLocked && (
                     <div className={`flex flex-wrap gap-3 pt-4 border-t ${isLive ? 'border-[#a51a8f]/10' : isSoon ? 'border-yellow-200 dark:border-yellow-900/30' : 'border-slate-200 dark:border-slate-700'}`}>
-                      {cls.recordingLink ? (<a href={cls.recordingLink} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"><PlayCircle className="w-4 h-4" />Assistir Gravação</a>) : (cls.meetLink && (<a href={cls.meetLink} target="_blank" rel="noreferrer" className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-colors ${isLive ? 'bg-[#a51a8f] text-white hover:bg-[#7d126b] shadow-md shadow-[#a51a8f]/30' : isSoon ? 'bg-[#eec00a] text-[#7d126b] hover:bg-[#d4ab09]' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600'}`}><Video className="w-4 h-4" />{isLive ? 'Entrar na Aula' : isSoon ? 'Link da Aula' : 'Acessar'}</a>))}
+                      {cls.recordingLink ? (<a href={cls.recordingLink} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"><PlayCircle className="w-4 h-4" />Assistir GravaÃ§Ã£o</a>) : (cls.meetLink && (<a href={cls.meetLink} target="_blank" rel="noreferrer" className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-colors ${isLive ? 'bg-[#a51a8f] text-white hover:bg-[#7d126b] shadow-md shadow-[#a51a8f]/30' : isSoon ? 'bg-[#eec00a] text-[#7d126b] hover:bg-[#d4ab09]' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600'}`}><Video className="w-4 h-4" />{isLive ? 'Entrar na Aula' : isSoon ? 'Link da Aula' : 'Acessar'}</a>))}
                       {cls.materials?.map((mat, i) => (<button key={i} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isLive || isSoon ? 'bg-white/50 dark:bg-black/20 text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-black/40' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'}`}><FileText className="w-4 h-4" />{mat.title}</button>))}
                     </div>
                   )}
@@ -396,9 +408,9 @@ const ViewCalendar = ({ classes }) => {
 
   return (
     <div className="space-y-6 pb-20 md:pb-0 animate-fadeIn relative">
-      <header className="flex justify-between items-center"><div><h2 className="text-2xl font-bold text-slate-800 dark:text-white">Calendário de Aulas</h2><p className="text-slate-500 dark:text-slate-400">Organize-se com a programação mensal</p></div><div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm"><ChevronLeft className="w-5 h-5 text-slate-400" /><span className="font-bold text-slate-700 dark:text-slate-200">Outubro</span><ChevronRight className="w-5 h-5 text-slate-400" /></div></header>
+      <header className="flex justify-between items-center"><div><h2 className="text-2xl font-bold text-slate-800 dark:text-white">CalendÃ¡rio de Aulas</h2><p className="text-slate-500 dark:text-slate-400">Organize-se com a programaÃ§Ã£o mensal</p></div><div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm"><ChevronLeft className="w-5 h-5 text-slate-400" /><span className="font-bold text-slate-700 dark:text-slate-200">Outubro</span><ChevronRight className="w-5 h-5 text-slate-400" /></div></header>
       <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden p-6">
-        <div className="grid grid-cols-7 mb-4 text-center">{['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (<div key={d} className="text-xs font-bold text-slate-400 uppercase tracking-wider">{d}</div>))}</div>
+        <div className="grid grid-cols-7 mb-4 text-center">{['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'SÃ¡b'].map(d => (<div key={d} className="text-xs font-bold text-slate-400 uppercase tracking-wider">{d}</div>))}</div>
         <div className="grid grid-cols-7 gap-2 md:gap-4">{Array.from({ length: startDayOffset }).map((_, i) => (<div key={`empty-${i}`} className="aspect-square"></div>))}{days.map(day => { const hasClass = classesByDay[day]?.length > 0; const isSelected = selectedDay === day; const status = hasClass ? classesByDay[day][0].status : null; let bgClass = 'bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'; if (isSelected) bgClass = 'bg-[#a51a8f] text-white shadow-lg ring-4 ring-[#fdf2fa] dark:ring-slate-600'; else if (status === 'live') bgClass = 'bg-[#fdf2fa] dark:bg-[#a51a8f]/20 border-2 border-[#a51a8f] text-[#a51a8f] dark:text-[#d36ac1]'; else if (status === 'soon') bgClass = 'bg-[#fff9db] dark:bg-yellow-900/20 border-2 border-[#eec00a] text-[#7d126b] dark:text-[#eec00a]'; else if (hasClass) bgClass = 'bg-slate-100 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300'; return (<button key={day} onClick={() => setSelectedDay(day)} className={`aspect-square rounded-2xl flex flex-col items-center justify-center relative transition-all duration-200 ${bgClass}`}><span className={`text-lg md:text-xl font-bold ${isSelected ? 'scale-110' : ''}`}>{day}</span>{hasClass && (<div className={`w-1.5 h-1.5 rounded-full mt-1 ${isSelected ? 'bg-white' : status === 'live' ? 'bg-[#a51a8f] animate-pulse' : 'bg-slate-400'}`}></div>)}</button>); })}</div>
       </div>
       {selectedDay && (
@@ -420,6 +432,8 @@ const ViewChallenges = ({ student, quizzes, onCompleteQuiz }) => {
   const [score, setScore] = useState(null);
   const [mySubmissions, setMySubmissions] = useState({}); // Map quizId -> submission
   const myChallenges = quizzes.filter(q => !q.assignedTo || q.assignedTo.length === 0 || q.assignedTo.includes(student.id));
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [pendingStartQuiz, setPendingStartQuiz] = useState(null);
 
   useEffect(() => {
     const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'submissions'), where("studentId", "==", student.id));
@@ -434,6 +448,18 @@ const ViewChallenges = ({ student, quizzes, onCompleteQuiz }) => {
     return () => unsubscribe();
   }, [student.id]);
 
+  useEffect(() => {
+    if (timeLeft === null) return;
+    if (timeLeft <= 0) {
+      submitQuiz();
+      return;
+    }
+    const timerId = setInterval(() => {
+      setTimeLeft(prev => prev - 1);
+    }, 1000);
+    return () => clearInterval(timerId);
+  }, [timeLeft]);
+
   const startQuiz = (quiz) => {
     // If already submitted and graded, show feedback
     const sub = mySubmissions[quiz.id];
@@ -443,16 +469,42 @@ const ViewChallenges = ({ student, quizzes, onCompleteQuiz }) => {
     }
     // If pending, show alert says "Under review"
     if (sub && sub.status === 'pending') {
-      alert("Este desafio está em correção pelo professor. Aguarde o retorno!");
+      alert("Este desafio estÃ¡ em correÃ§Ã£o pelo professor. Aguarde o retorno!");
       return;
     }
+
+    // Check for timer interception
+    const limit = quiz.timeLimit ? parseInt(quiz.timeLimit) : 0;
+    if (!isNaN(limit) && limit > 0 && (!sub || sub.status !== 'completed')) {
+      setPendingStartQuiz(quiz);
+      return;
+    }
+
+    confirmStartQuiz(quiz);
+  };
+
+  const confirmStartQuiz = (quiz) => {
+    setPendingStartQuiz(null);
+    const sub = mySubmissions[quiz.id];
 
     setActiveQuiz(quiz);
     setAnswers({});
     setScore(null);
+
+    // Initialize timer if applicable
+    const limit = quiz.timeLimit ? parseInt(quiz.timeLimit) : 0;
+    if (!isNaN(limit) && limit > 0 && (!sub || sub.status !== 'completed')) {
+      console.log("Starting timer:", limit, "minutes");
+      setTimeLeft(limit * 60);
+    } else {
+      console.log("No timer or invalid limit:", quiz.timeLimit);
+      setTimeLeft(null);
+    }
   };
+
   const handleAnswer = (qIndex, option) => { setAnswers(prev => ({ ...prev, [qIndex]: option })); };
   const submitQuiz = async () => {
+    setTimeLeft(null); // Stop timer
     let correctCount = 0;
     activeQuiz.questions.forEach((q, idx) => {
       const studentAnswer = answers[idx];
@@ -492,6 +544,13 @@ const ViewChallenges = ({ student, quizzes, onCompleteQuiz }) => {
     const sub = mySubmissions[activeQuiz.id];
     const isGradedView = sub && sub.status === 'graded';
 
+    // Format timer
+    const formatTime = (seconds) => {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+    };
+
     if (isGradedView) {
       return (
         <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl overflow-hidden min-h-[500px] flex flex-col animate-slideUp">
@@ -510,7 +569,7 @@ const ViewChallenges = ({ student, quizzes, onCompleteQuiz }) => {
               </div>
               {sub.teacherBonusXP > 0 && (
                 <div className="flex-1 text-center border-r border-slate-200 dark:border-slate-600">
-                  <p className="text-xs font-bold text-slate-400 uppercase">Bônus Extra</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase">BÃ´nus Extra</p>
                   <p className="text-xl font-bold text-[#eec00a]">+{sub.teacherBonusXP} XP</p>
                 </div>
               )}
@@ -522,13 +581,13 @@ const ViewChallenges = ({ student, quizzes, onCompleteQuiz }) => {
 
             {sub.teacherFeedback && (
               <div className="bg-[#fdf2fa] dark:bg-[#a51a8f]/10 p-4 rounded-xl border border-[#a51a8f]/20">
-                <h4 className="font-bold text-[#a51a8f] dark:text-[#d36ac1] mb-2 flex items-center gap-2"><MessageSquare size={16} /> Comentário do Professor</h4>
+                <h4 className="font-bold text-[#a51a8f] dark:text-[#d36ac1] mb-2 flex items-center gap-2"><MessageSquare size={16} /> ComentÃ¡rio do Professor</h4>
                 <p className="text-slate-700 italic">"{sub.teacherFeedback}"</p>
               </div>
             )}
 
             <div className="space-y-4">
-              <h4 className="font-bold text-slate-700 border-b pb-2">Detalhes da Correção</h4>
+              <h4 className="font-bold text-slate-700 border-b pb-2">Detalhes da CorreÃ§Ã£o</h4>
               {sub.questions && sub.questions.map((q, idx) => {
                 // questionsStatus is saved by teacher: { 0: true, 1: false }
                 const isCorrect = sub.questionsStatus ? sub.questionsStatus[idx] : (sub.score > idx); // Fallback if missing
@@ -548,12 +607,12 @@ const ViewChallenges = ({ student, quizzes, onCompleteQuiz }) => {
                       {status ? <CheckCircle className="text-green-500 w-5 h-5 flex-shrink-0" /> : <XCircle className="text-red-500 w-5 h-5 flex-shrink-0" />}
                     </div>
                     <p className="text-sm text-slate-600 mb-1">
-                      <span className="font-bold text-slate-400 text-xs uppercase">Sua Resposta:</span> {sub.answers[idx] || "—"}
+                      <span className="font-bold text-slate-400 text-xs uppercase">Sua Resposta:</span> {sub.answers[idx] || "â€”"}
                     </p>
                     {/* Show Teacher Specific Correction if available, otherwise show Answer Key for incorrect */}
                     {sub.teacherCorrections && sub.teacherCorrections[idx] ? (
                       <div className="mt-2 text-sm bg-blue-50 border border-blue-100 p-2 rounded">
-                        <span className="font-bold text-blue-700 text-xs uppercase block mb-1">Correção do Professor:</span>
+                        <span className="font-bold text-blue-700 text-xs uppercase block mb-1">CorreÃ§Ã£o do Professor:</span>
                         <span className="text-blue-900">{sub.teacherCorrections[idx]}</span>
                       </div>
                     ) : !status && (q.type !== 'short_answer' && q.type !== 'long_answer') && (
@@ -572,12 +631,23 @@ const ViewChallenges = ({ student, quizzes, onCompleteQuiz }) => {
 
     return (
       <div className="bg-white rounded-3xl shadow-xl overflow-hidden min-h-[500px] flex flex-col">
-        <div className="bg-[#a51a8f] p-6 text-white flex justify-between items-center"><h3 className="text-xl font-bold">{activeQuiz.title}</h3><button onClick={() => setActiveQuiz(null)} className="p-2 hover:bg-white/10 rounded-full"><X /></button></div>
+        <div className="bg-[#a51a8f] p-6 text-white flex justify-between items-center relative">
+          <h3 className="text-xl font-bold flex items-center gap-2">
+            {activeQuiz.title}
+            {timeLeft !== null && (
+              <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-mono ${timeLeft < 60 ? 'bg-red-500 animate-pulse' : 'bg-white/20'}`}>
+                <Clock size={16} />
+                {formatTime(timeLeft)}
+              </div>
+            )}
+          </h3>
+          <button onClick={() => setActiveQuiz(null)} className="p-2 hover:bg-white/10 rounded-full"><X /></button>
+        </div>
         <div className="p-6 flex-1 overflow-y-auto">
           {score === null ? (
-            <div className="space-y-8">{activeQuiz.questions.map((q, idx) => (<div key={idx} className="bg-slate-50 p-4 rounded-xl"><p className="font-bold text-slate-800 mb-4 text-lg">{idx + 1}. {q.q}</p>{(q.type === 'multiple_choice' || q.type === 'true_false') && (<div className="grid grid-cols-1 gap-3">{q.options.map((opt) => (<button key={opt} onClick={() => handleAnswer(idx, opt)} className={`text-left px-4 py-3 rounded-lg border-2 transition-all ${answers[idx] === opt ? 'border-[#a51a8f] bg-[#fdf2fa] text-[#a51a8f] font-bold' : 'border-slate-200 hover:border-[#a51a8f]/50'}`}>{opt}</button>))}</div>)}{q.type === 'short_answer' && (<input type="text" placeholder="Sua resposta..." className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-[#a51a8f] focus:outline-none" value={answers[idx] || ''} onChange={(e) => handleAnswer(idx, e.target.value)} />)}{q.type === 'long_answer' && (<textarea rows={4} placeholder="Digite sua resposta aqui..." className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-[#a51a8f] focus:outline-none" value={answers[idx] || ''} onChange={(e) => handleAnswer(idx, e.target.value)}></textarea>)}</div>))}<button onClick={submitQuiz} disabled={Object.keys(answers).length !== activeQuiz.questions.length} className="w-full bg-green-500 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg">Enviar Respostas</button></div>
+            <div className="space-y-8">{activeQuiz.questions.map((q, idx) => (<div key={idx} className="bg-slate-50 p-4 rounded-xl"><p className="font-bold text-slate-800 mb-4 text-lg">{idx + 1}. {q.q}</p>{(q.type === 'multiple_choice' || q.type === 'true_false') && (<div className="grid grid-cols-1 gap-3">{q.options.map((opt) => (<button key={opt} onClick={() => handleAnswer(idx, opt)} className={`text-left px-4 py-3 rounded-lg border-2 transition-all ${answers[idx] === opt ? 'border-[#a51a8f] bg-[#fdf2fa] text-[#a51a8f] font-bold' : 'border-slate-200 hover:border-[#a51a8f]/50 text-slate-600'}`}>{opt}</button>))}</div>)}{q.type === 'short_answer' && (<input type="text" placeholder="Sua resposta..." className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-[#a51a8f] focus:outline-none" value={answers[idx] || ''} onChange={(e) => handleAnswer(idx, e.target.value)} />)}{q.type === 'long_answer' && (<textarea rows={4} placeholder="Digite sua resposta aqui..." className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-[#a51a8f] focus:outline-none" value={answers[idx] || ''} onChange={(e) => handleAnswer(idx, e.target.value)}></textarea>)}</div>))}<button onClick={submitQuiz} disabled={Object.keys(answers).length !== activeQuiz.questions.length} className="w-full bg-green-500 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg">Enviar Respostas</button></div>
           ) : (
-            <div className="text-center py-10 animate-fadeIn"><div className="w-24 h-24 bg-[#eec00a] rounded-full mx-auto flex items-center justify-center text-5xl mb-6 shadow-lg animate-bounce text-white"><Star size={48} fill="white" /></div><h3 className="text-3xl font-bold text-slate-800 mb-2">Desafio Enviado!</h3><p className="text-slate-600 mb-6">Suas respostas foram enviadas para correção.</p><div className="flex justify-center gap-4 mb-8"><div className="bg-[#fdf2fa] px-4 py-2 rounded-lg"><span className="block text-xs text-[#a51a8f] font-bold uppercase">Ganhou</span><span className="text-xl font-bold text-[#7d126b]">+{activeQuiz.xpReward} XP</span></div><div className="bg-[#fff9db] px-4 py-2 rounded-lg"><span className="block text-xs text-[#b89508] font-bold uppercase">Ganhou</span><span className="flex items-center gap-1 text-xl font-bold text-[#b89508]">+{activeQuiz.coinReward} <Star className="w-4 h-4 fill-[#b89508]" /></span></div></div><button onClick={() => setActiveQuiz(null)} className="bg-[#a51a8f] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#8e167b]">Voltar aos Desafios</button></div>
+            <div className="text-center py-10 animate-fadeIn"><div className="w-24 h-24 bg-[#eec00a] rounded-full mx-auto flex items-center justify-center text-5xl mb-6 shadow-lg animate-bounce text-white"><Star size={48} fill="white" /></div><h3 className="text-3xl font-bold text-slate-800 mb-2">Desafio Enviado!</h3><p className="text-slate-600 mb-6">Suas respostas foram enviadas para correÃ§Ã£o.</p><div className="flex justify-center gap-4 mb-8"><div className="bg-[#fdf2fa] px-4 py-2 rounded-lg"><span className="block text-xs text-[#a51a8f] font-bold uppercase">Ganhou</span><span className="text-xl font-bold text-[#7d126b]">+{activeQuiz.xpReward} XP</span></div><div className="bg-[#fff9db] px-4 py-2 rounded-lg"><span className="block text-xs text-[#b89508] font-bold uppercase">Ganhou</span><span className="flex items-center gap-1 text-xl font-bold text-[#b89508]">+{activeQuiz.coinReward} <Star className="w-4 h-4 fill-[#b89508]" /></span></div></div><button onClick={() => setActiveQuiz(null)} className="bg-[#a51a8f] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#8e167b]">Voltar aos Desafios</button></div>
           )}
         </div>
       </div>
@@ -586,7 +656,7 @@ const ViewChallenges = ({ student, quizzes, onCompleteQuiz }) => {
 
   return (
     <div className="space-y-6 pb-20 md:pb-0">
-      <header><h2 className="text-2xl font-bold text-slate-800">Sala de Desafios</h2><p className="text-slate-500">Teste seus conhecimentos e ganhe prêmios</p></header>
+      <header><h2 className="text-2xl font-bold text-slate-800">Sala de Desafios</h2><p className="text-slate-500">Teste seus conhecimentos e ganhe prÃªmios</p></header>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {myChallenges.map(quiz => {
           const isCompleted = quiz.completedBy?.includes(student.id);
@@ -597,7 +667,7 @@ const ViewChallenges = ({ student, quizzes, onCompleteQuiz }) => {
                 <div className={`p-3 rounded-xl ${isCompleted ? 'bg-green-200 text-green-700' : isExpired ? 'bg-slate-300 text-slate-500' : 'bg-[#fdf2fa] text-[#a51a8f]'}`}><Gamepad2 className="w-6 h-6" /></div>
                 {/* Status Badge Update */}
                 {mySubmissions[quiz.id]?.status === 'pending' ? (
-                  <span className="flex items-center gap-1 text-orange-600 font-bold text-sm bg-orange-100 px-2 py-1 rounded-full"><Clock className="w-4 h-4" /> Em Análise</span>
+                  <span className="flex items-center gap-1 text-orange-600 font-bold text-sm bg-orange-100 px-2 py-1 rounded-full"><Clock className="w-4 h-4" /> Em AnÃ¡lise</span>
                 ) : mySubmissions[quiz.id]?.status === 'graded' ? (
                   <span className="flex items-center gap-1 text-green-700 font-bold text-sm bg-white px-2 py-1 rounded-full shadow-sm"><CheckCircle className="w-4 h-4" /> Ver Nota</span>
                 ) : isCompleted ? (
@@ -612,16 +682,37 @@ const ViewChallenges = ({ student, quizzes, onCompleteQuiz }) => {
                 {quiz.title}
                 {quiz.challengeCode && <span className="text-xs font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">#{quiz.challengeCode}</span>}
               </h3>
-              <p className="text-slate-500 text-sm mb-6 mt-2">Responda {quiz.questions?.length} questões para ganhar pontos.</p>
+              <p className="text-slate-500 text-sm mb-6 mt-2">Responda {quiz.questions?.length} questÃµes para ganhar pontos.</p>
+              {quiz.timeLimit && parseInt(quiz.timeLimit) > 0 && (<div className="flex items-center gap-1 text-xs text-orange-600 font-bold mb-2 bg-orange-50 px-2 py-1 rounded w-fit"><Clock size={12} /> Limite de Tempo: {quiz.timeLimit} min</div>)}
               {quiz.deadline && !isCompleted && !isExpired && (<div className="text-xs text-red-500 font-bold mb-4 flex items-center gap-1"><Clock size={12} /> Expira em: {new Date(quiz.deadline).toLocaleString()}</div>)}
               <button onClick={() => startQuiz(quiz)} disabled={isExpired && !isCompleted} className={`w-full py-3 rounded-xl font-bold transition-colors ${isCompleted ? 'bg-green-600 text-white hover:bg-green-700' : isExpired ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-[#a51a8f] text-white hover:bg-[#8e167b] shadow-lg shadow-[#a51a8f]/20'}`}>
-                {mySubmissions[quiz.id]?.status === 'graded' ? 'Ver Resultado' : mySubmissions[quiz.id]?.status === 'pending' ? 'Aguardar Correção' : isCompleted ? 'Enviado' : isExpired ? 'Prazo Esgotado' : 'Começar Desafio'}
+                {mySubmissions[quiz.id]?.status === 'graded' ? 'Ver Resultado' : mySubmissions[quiz.id]?.status === 'pending' ? 'Aguardar CorreÃ§Ã£o' : isCompleted ? 'Enviado' : isExpired ? 'Prazo Esgotado' : 'ComeÃ§ar Desafio'}
               </button>
             </div>
           );
         })}
-        {myChallenges.length === 0 && (<p className="text-slate-400 col-span-full text-center py-10">Você não tem desafios pendentes no momento.</p>)}
+        {myChallenges.length === 0 && (<p className="text-slate-400 col-span-full text-center py-10">VocÃª nÃ£o tem desafios pendentes no momento.</p>)}
       </div>
+
+      {/* START QUIZ WARNING MODAL */}
+      {pendingStartQuiz && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl w-full max-w-sm overflow-hidden animate-slideUp p-6 text-center">
+            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock size={32} className="text-yellow-600" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Desafio com Tempo!</h3>
+            <p className="text-slate-600 dark:text-slate-300 mb-6">
+              Este desafio tem um limite de <strong className="text-[#a51a8f]">{pendingStartQuiz.timeLimit} minutos</strong>.
+              <br /><span className="text-xs mt-2 block">O cronÃ´metro comeÃ§a assim que vocÃª clicar em iniciar.</span>
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setPendingStartQuiz(null)} className="flex-1 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">Cancelar</button>
+              <button onClick={() => confirmStartQuiz(pendingStartQuiz)} className="flex-1 py-3 bg-[#a51a8f] text-white rounded-xl font-bold hover:bg-[#7d126b] shadow-lg">Iniciar Agora</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -630,14 +721,14 @@ const ViewRank = ({ students, currentStudentId }) => {
   const sortedStudents = [...students].sort((a, b) => b.xp - a.xp);
   return (
     <div className="space-y-6 pb-20 md:pb-0">
-      <header className="text-center md:text-left"><h2 className="text-2xl font-bold text-slate-800 dark:text-white">Ranking da Turma</h2><p className="text-slate-500 dark:text-slate-400">Quem será o Mestre da Língua?</p></header>
-      <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden"><div className="bg-[#a51a8f] dark:bg-[#7d126b] p-4 text-white font-bold grid grid-cols-6 gap-2 text-sm md:text-base"><div className="col-span-1 text-center">#</div><div className="col-span-3">Aluno</div><div className="col-span-2 text-right">XP</div></div><div className="divide-y divide-slate-100 dark:divide-slate-700">{sortedStudents.map((st, idx) => { const isMe = st.id === currentStudentId; let rankIcon = null; if (idx === 0) rankIcon = '🥇'; if (idx === 1) rankIcon = '🥈'; if (idx === 2) rankIcon = '🥉'; return (<div key={st.id} className={`grid grid-cols-6 gap-2 p-4 items-center ${isMe ? 'bg-[#fff9db] dark:bg-yellow-900/20' : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}><div className="col-span-1 text-center font-bold text-slate-600 dark:text-slate-400 flex justify-center items-center">{rankIcon ? <span className="text-2xl">{rankIcon}</span> : `#${idx + 1}`}</div><div className="col-span-3 flex items-center gap-3"><div className="w-10 h-10 bg-[#fdf2fa] dark:bg-slate-700 rounded-full flex items-center justify-center text-xl border border-[#a51a8f]/20 overflow-hidden">{st.photoUrl ? <img src={st.photoUrl} alt={st.name} className="w-full h-full object-cover" /> : st.avatar}</div><div className="flex flex-col"><span className={`font-bold ${isMe ? 'text-[#a51a8f] dark:text-[#eec00a]' : 'text-slate-700 dark:text-slate-200'}`}>{st.name} {isMe && '(Você)'}</span><span className="text-xs text-slate-400">Nível {st.level}</span></div></div><div className="col-span-2 text-right font-mono font-bold text-[#a51a8f] dark:text-[#d36ac1]">{st.xp.toLocaleString()} XP</div></div>); })}</div></div>
+      <header className="text-center md:text-left"><h2 className="text-2xl font-bold text-slate-800 dark:text-white">Ranking da Turma</h2><p className="text-slate-500 dark:text-slate-400">Quem serÃ¡ o Mestre da LÃ­ngua?</p></header>
+      <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden"><div className="bg-[#a51a8f] dark:bg-[#7d126b] p-4 text-white font-bold grid grid-cols-6 gap-2 text-sm md:text-base"><div className="col-span-1 text-center">#</div><div className="col-span-3">Aluno</div><div className="col-span-2 text-right">XP</div></div><div className="divide-y divide-slate-100 dark:divide-slate-700">{sortedStudents.map((st, idx) => { const isMe = st.id === currentStudentId; let rankIcon = null; if (idx === 0) rankIcon = 'ðŸ¥‡'; if (idx === 1) rankIcon = 'ðŸ¥ˆ'; if (idx === 2) rankIcon = 'ðŸ¥‰'; return (<div key={st.id} className={`grid grid-cols-6 gap-2 p-4 items-center ${isMe ? 'bg-[#fff9db] dark:bg-yellow-900/20' : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}><div className="col-span-1 text-center font-bold text-slate-600 dark:text-slate-400 flex justify-center items-center">{rankIcon ? <span className="text-2xl">{rankIcon}</span> : `#${idx + 1}`}</div><div className="col-span-3 flex items-center gap-3"><div className="w-10 h-10 bg-[#fdf2fa] dark:bg-slate-700 rounded-full flex items-center justify-center text-xl border border-[#a51a8f]/20 overflow-hidden">{st.photoUrl ? <img src={st.photoUrl} alt={st.name} className="w-full h-full object-cover" /> : st.avatar}</div><div className="flex flex-col"><span className={`font-bold ${isMe ? 'text-[#a51a8f] dark:text-[#eec00a]' : 'text-slate-700 dark:text-slate-200'}`}>{st.name} {isMe && '(VocÃª)'}</span><span className="text-xs text-slate-400">NÃ­vel {st.level}</span></div></div><div className="col-span-2 text-right font-mono font-bold text-[#a51a8f] dark:text-[#d36ac1]">{st.xp.toLocaleString()} XP</div></div>); })}</div></div>
     </div>
   );
 };
 
 // --- VIEW CORRECTIONS (TEACHER) ---
-const ViewCorrections = ({ students }) => {
+const ViewCorrections = ({ students, quizzes }) => {
   const [submissions, setSubmissions] = useState([]);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [feedback, setFeedback] = useState("");
@@ -713,7 +804,7 @@ const ViewCorrections = ({ students }) => {
         });
       }
 
-      alert("Correção enviada com sucesso!");
+      alert("CorreÃ§Ã£o enviada com sucesso!");
       setSelectedSubmission(null);
       setFeedback("");
       setBonusXP(0);
@@ -721,17 +812,22 @@ const ViewCorrections = ({ students }) => {
       setTeacherCorrections({});
     } catch (error) {
       console.error("Error finalizing correction:", error);
-      alert("Erro ao salvar correção.");
+      alert("Erro ao salvar correÃ§Ã£o.");
     }
   };
 
   if (selectedSubmission) {
+    const selectedQuizCode = quizzes?.find(q => q.id === selectedSubmission.quizId)?.challengeCode;
+
     return (
       <div className="bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col animate-slideUp">
         <div className="bg-[#2d1b36] p-6 text-white flex justify-between items-center">
           <div>
-            <h3 className="text-xl font-bold flex items-center gap-2"><FileCheck className="text-[#eec00a]" /> Correção de Desafio</h3>
-            <p className="text-white/60 text-sm">{selectedSubmission.studentName} - {selectedSubmission.quizTitle}</p>
+            <h3 className="text-xl font-bold flex items-center gap-2"><FileCheck className="text-[#eec00a]" /> CorreÃ§Ã£o de Desafio</h3>
+            <p className="text-white/60 text-sm flex items-center gap-2">
+              {selectedSubmission.studentName} - {selectedSubmission.quizTitle}
+              {selectedQuizCode && <span className="bg-white/10 px-2 py-0.5 rounded text-xs font-mono text-[#eec00a]">#{selectedQuizCode}</span>}
+            </p>
           </div>
           <button onClick={() => setSelectedSubmission(null)} className="p-2 hover:bg-white/10 rounded-full"><X /></button>
         </div>
@@ -749,7 +845,7 @@ const ViewCorrections = ({ students }) => {
           </div>
 
           <div className="space-y-6">
-            <h4 className="font-bold text-slate-700 border-b pb-2">Respostas do Aluno (Clique para alterar correção)</h4>
+            <h4 className="font-bold text-slate-700 border-b pb-2">Respostas do Aluno (Clique para alterar correÃ§Ã£o)</h4>
             {selectedSubmission.questions && selectedSubmission.questions.map((q, idx) => {
               const isCorrect = manualGrades[idx];
               return (
@@ -779,11 +875,11 @@ const ViewCorrections = ({ students }) => {
                   </div>
 
                   <div className="mt-3 pt-3 border-t border-slate-100">
-                    <label className="block text-xs font-bold text-[#a51a8f] uppercase mb-1">Sua Correção / Sugestão:</label>
+                    <label className="block text-xs font-bold text-[#a51a8f] uppercase mb-1">Sua CorreÃ§Ã£o / SugestÃ£o:</label>
                     <textarea
                       className="w-full text-sm border border-slate-200 rounded-lg p-2 focus:border-[#a51a8f] focus:outline-none"
                       rows={2}
-                      placeholder="Escreva a resposta ideal aqui se necessário..."
+                      placeholder="Escreva a resposta ideal aqui se necessÃ¡rio..."
                       value={teacherCorrections[idx] || ''}
                       onChange={(e) => handleTeacherCorrectionChange(idx, e.target.value)}
                     />
@@ -797,7 +893,7 @@ const ViewCorrections = ({ students }) => {
             <h4 className="font-bold text-[#a51a8f] mb-4 flex items-center gap-2"><MessageSquare size={18} /> Feedback do Professor</h4>
 
             <div className="mb-4">
-              <label className="block text-sm font-bold text-slate-700 mb-2">Comentários:</label>
+              <label className="block text-sm font-bold text-slate-700 mb-2">ComentÃ¡rios:</label>
               <textarea
                 className="w-full border border-slate-200 rounded-xl p-3 focus:outline-none focus:border-[#a51a8f]"
                 rows={3}
@@ -808,7 +904,7 @@ const ViewCorrections = ({ students }) => {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-bold text-slate-700 mb-2">XP Extra (Bônus):</label>
+              <label className="block text-sm font-bold text-slate-700 mb-2">XP Extra (BÃ´nus):</label>
               <div className="flex items-center gap-3">
                 <input
                   type="number"
@@ -823,7 +919,7 @@ const ViewCorrections = ({ students }) => {
             </div>
 
             <button onClick={handleFinalizeCorrection} className="w-full bg-[#a51a8f] text-white py-3 rounded-xl font-bold hover:bg-[#7d126b] shadow-lg shadow-[#a51a8f]/20 transition-transform active:scale-95">
-              Finalizar e Enviar Correção
+              Finalizar e Enviar CorreÃ§Ã£o
             </button>
           </div>
         </div>
@@ -840,33 +936,39 @@ const ViewCorrections = ({ students }) => {
               <FileCheck size={40} />
             </div>
             <h3 className="text-lg font-bold text-slate-500">Tudo em dia!</h3>
-            <p className="text-slate-400">Nenhuma tarefa pendente de correção.</p>
+            <p className="text-slate-400">Nenhuma tarefa pendente de correÃ§Ã£o.</p>
           </div>
         ) : (
-          submissions.map(sub => (
-            <div key={sub.id} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row justify-between items-center gap-4">
-              <div className="flex items-center gap-4 w-full md:w-auto">
-                <div className="w-12 h-12 rounded-full bg-[#fdf2fa] flex items-center justify-center text-[#a51a8f]">
-                  <FileCheck size={24} />
+          submissions.map(sub => {
+            const quizCode = quizzes?.find(q => q.id === sub.quizId)?.challengeCode;
+            return (
+              <div key={sub.id} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                  <div className="w-12 h-12 rounded-full bg-[#fdf2fa] flex items-center justify-center text-[#a51a8f]">
+                    <FileCheck size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-800 flex items-center gap-2">
+                      {sub.quizTitle}
+                      {quizCode && <span className="text-xs font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">#{quizCode}</span>}
+                    </h4>
+                    <p className="text-sm text-slate-500">Aluno: <span className="font-bold text-slate-700">{sub.studentName}</span></p>
+                    <p className="text-xs text-slate-400">{sub.submittedAt ? new Date(sub.submittedAt.seconds * 1000).toLocaleString() : 'Data desconhecida'}</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-slate-800">{sub.quizTitle}</h4>
-                  <p className="text-sm text-slate-500">Aluno: <span className="font-bold text-slate-700">{sub.studentName}</span></p>
-                  <p className="text-xs text-slate-400">{sub.submittedAt ? new Date(sub.submittedAt.seconds * 1000).toLocaleString() : 'Data desconhecida'}</p>
-                </div>
-              </div>
 
-              <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
-                <div className="text-right mr-4">
-                  <span className="block text-xs font-bold text-slate-400 uppercase">Acertos</span>
-                  <span className="font-bold text-[#a51a8f] text-lg">{sub.score} / {sub.totalQuestions}</span>
+                <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+                  <div className="text-right mr-4">
+                    <span className="block text-xs font-bold text-slate-400 uppercase">Acertos</span>
+                    <span className="font-bold text-[#a51a8f] text-lg">{sub.score} / {sub.totalQuestions}</span>
+                  </div>
+                  <button onClick={() => setSelectedSubmission(sub)} className="bg-[#a51a8f] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#7d126b] text-sm shadow-md">
+                    Corrigir
+                  </button>
                 </div>
-                <button onClick={() => setSelectedSubmission(sub)} className="bg-[#a51a8f] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#7d126b] text-sm shadow-md">
-                  Corrigir
-                </button>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>
@@ -880,7 +982,7 @@ const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogout }) =
   const [classFilterYear, setClassFilterYear] = useState('Todos');
   const [editingClass, setEditingClass] = useState(null);
 
-  const [newStudentData, setNewStudentData] = useState({ name: '', age: '', gender: 'Masculino', parentName: '', parentEmail: '', parentPhone: '', studentPhone: '', schoolYear: '6º Ano', photoUrl: '' });
+  const [newStudentData, setNewStudentData] = useState({ name: '', age: '', gender: 'Masculino', parentName: '', parentEmail: '', parentPhone: '', studentPhone: '', schoolYear: '6Âº Ano', photoUrl: '' });
   const [newClass, setNewClass] = useState({ title: '', date: '', description: '', link: '', type: 'meet', assignedTo: [], materials: [] });
   const [materialInput, setMaterialInput] = useState({ title: '', type: 'pdf', url: '' });
   const [showChallengeForm, setShowChallengeForm] = useState(false);
@@ -892,41 +994,41 @@ const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogout }) =
   const totalRevenue = totalStudents * 150;
 
   const handleAddStudent = async () => {
-    if (!newStudentData.name || !newStudentData.parentName || !newStudentData.parentEmail) return alert("Preencha campos obrigatórios.");
+    if (!newStudentData.name || !newStudentData.parentName || !newStudentData.parentEmail) return alert("Preencha campos obrigatÃ³rios.");
     const newId = `st${Date.now()}`;
     let userCode; let isUnique = false; const namePart = newStudentData.name.substring(0, 3).toUpperCase();
     let attempts = 0;
     while (!isUnique && attempts < 100) { const numPart = Math.floor(1000 + Math.random() * 9000); userCode = `${namePart}${numPart}`; if (!students.some(s => s.userCode === userCode)) isUnique = true; attempts++; }
-    if (!isUnique) return alert("Erro ao gerar código.");
-    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'students', newId), { id: newId, ...newStudentData, userCode, avatar: '🧑‍🎓', photoUrl: newStudentData.photoUrl || '', xp: 0, level: 1, coins: 0, password: '1234', role: 'student' });
-    setNewStudentData({ name: '', age: '', gender: 'Masculino', parentName: '', parentEmail: '', parentPhone: '', studentPhone: '', schoolYear: '6º Ano', photoUrl: '' });
-    setShowStudentForm(false); alert(`Aluno cadastrado! Código: ${userCode}`);
+    if (!isUnique) return alert("Erro ao gerar cÃ³digo.");
+    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'students', newId), { id: newId, ...newStudentData, userCode, avatar: 'ðŸ§‘â€ðŸŽ“', photoUrl: newStudentData.photoUrl || '', xp: 0, level: 1, coins: 0, password: '1234', role: 'student' });
+    setNewStudentData({ name: '', age: '', gender: 'Masculino', parentName: '', parentEmail: '', parentPhone: '', studentPhone: '', schoolYear: '6Âº Ano', photoUrl: '' });
+    setShowStudentForm(false); alert(`Aluno cadastrado! CÃ³digo: ${userCode}`);
   };
 
-  const handleAddMaterialToClass = () => { if (!materialInput.title) return alert("Título obrigatório."); setNewClass({ ...newClass, materials: [...newClass.materials, { ...materialInput }] }); setMaterialInput({ title: '', type: 'pdf', url: '' }); };
+  const handleAddMaterialToClass = () => { if (!materialInput.title) return alert("TÃ­tulo obrigatÃ³rio."); setNewClass({ ...newClass, materials: [...newClass.materials, { ...materialInput }] }); setMaterialInput({ title: '', type: 'pdf', url: '' }); };
   const handleRemoveMaterialFromClass = (index) => { setNewClass({ ...newClass, materials: newClass.materials.filter((_, i) => i !== index) }); };
 
   const handleAddClass = async () => {
-    if (!newClass.title || !newClass.date) return alert("Título e Data são obrigatórios.");
+    if (!newClass.title || !newClass.date) return alert("TÃ­tulo e Data sÃ£o obrigatÃ³rios.");
     const newId = `cl${Date.now()}`;
     let classCode; let isUnique = false; let attempts = 0;
     while (!isUnique && attempts < 50) { const numPart = Math.floor(1000 + Math.random() * 9000); classCode = `AUL${numPart}`; if (!classes.some(c => c.classCode === classCode)) isUnique = true; attempts++; }
     const classData = { id: newId, classCode, title: newClass.title, date: newClass.date, description: newClass.description, status: 'locked', materials: newClass.materials, assignedTo: newClass.assignedTo, sortOrder: 99, createdBy: currentUser.name };
     if (newClass.type === 'meet') classData.meetLink = newClass.link; else classData.recordingLink = newClass.link;
     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'classes', newId), classData);
-    setNewClass({ title: '', date: '', description: '', link: '', type: 'meet', assignedTo: [], materials: [] }); alert(`Aula criada por ${currentUser.name}! Código: ${classCode}`);
+    setNewClass({ title: '', date: '', description: '', link: '', type: 'meet', assignedTo: [], materials: [] }); alert(`Aula criada por ${currentUser.name}! CÃ³digo: ${classCode}`);
   };
 
   const handleUpdateClass = async () => { if (!editingClass || !editingClass.title) return; await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'classes', editingClass.id), { title: editingClass.title, date: editingClass.date, description: editingClass.description, meetLink: editingClass.meetLink || '', recordingLink: editingClass.recordingLink || '', assignedTo: editingClass.assignedTo, status: editingClass.status }); setEditingClass(null); alert('Aula atualizada!'); };
-  const handleDuplicateClass = (cls) => { setNewClass({ title: cls.title + ' (Cópia)', date: '', description: cls.description, link: cls.meetLink || cls.recordingLink || '', type: cls.meetLink ? 'meet' : 'recording', assignedTo: [], materials: cls.materials || [] }); window.scrollTo({ top: 0, behavior: 'smooth' }); alert('Dados copiados para o formulário.'); };
+  const handleDuplicateClass = (cls) => { setNewClass({ title: cls.title + ' (CÃ³pia)', date: '', description: cls.description, link: cls.meetLink || cls.recordingLink || '', type: cls.meetLink ? 'meet' : 'recording', assignedTo: [], materials: cls.materials || [] }); window.scrollTo({ top: 0, behavior: 'smooth' }); alert('Dados copiados para o formulÃ¡rio.'); };
   const handleDeleteClass = async (classId) => { if (confirm('Excluir aula?')) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'classes', classId)); }
 
   const addQuestionToChallenge = () => { if (!currentQuestion.text) return alert("Digite o enunciado."); let qToAdd = { type: currentQuestion.type, q: currentQuestion.text, answer: currentQuestion.correctAnswer }; if (currentQuestion.type === 'multiple_choice') qToAdd.options = currentQuestion.options.filter(o => o.trim() !== ''); else if (currentQuestion.type === 'true_false') qToAdd.options = ['Verdadeiro', 'Falso']; setNewChallenge({ ...newChallenge, questions: [...newChallenge.questions, qToAdd] }); setCurrentQuestion({ type: 'multiple_choice', text: '', options: ['', ''], correctAnswer: '' }); };
-  const handleEditChallenge = (quiz) => { setNewChallenge({ id: quiz.id, title: quiz.title, xpReward: quiz.xpReward, coinReward: quiz.coinReward, questions: quiz.questions, assignedTo: quiz.assignedTo || [], deadline: quiz.deadline || '' }); setShowChallengeForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const handleEditChallenge = (quiz) => { setNewChallenge({ id: quiz.id, title: quiz.title, xpReward: quiz.xpReward, coinReward: quiz.coinReward, questions: quiz.questions, assignedTo: quiz.assignedTo || [], deadline: quiz.deadline || '', timeLimit: quiz.timeLimit || '' }); setShowChallengeForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
   const saveChallenge = async () => {
-    if (!newChallenge.title || newChallenge.questions.length === 0) return alert("Adicione título e questões.");
-    const data = { title: newChallenge.title, xpReward: newChallenge.xpReward, coinReward: newChallenge.coinReward, questions: newChallenge.questions, assignedTo: newChallenge.assignedTo || [], deadline: newChallenge.deadline || '' };
+    if (!newChallenge.title || newChallenge.questions.length === 0) return alert("Adicione tÃ­tulo e questÃµes.");
+    const data = { title: newChallenge.title, xpReward: newChallenge.xpReward, coinReward: newChallenge.coinReward, questions: newChallenge.questions, assignedTo: newChallenge.assignedTo || [], deadline: newChallenge.deadline || '', timeLimit: newChallenge.timeLimit || '' };
 
     if (newChallenge.id) {
       await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'quizzes', newChallenge.id), data);
@@ -953,7 +1055,7 @@ const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogout }) =
         completedBy: [],
         createdBy: currentUser.name
       });
-      alert(`Desafio criado por ${currentUser.name}! Código: ${challengeCode}`);
+      alert(`Desafio criado por ${currentUser.name}! CÃ³digo: ${challengeCode}`);
     }
     setNewChallenge({ id: null, title: '', xpReward: 50, coinReward: 5, questions: [], assignedTo: [], deadline: '' }); setShowChallengeForm(false);
   };
@@ -973,16 +1075,16 @@ const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogout }) =
       case 'students':
         return (
           <div className="space-y-6 animate-fadeIn">
-            {!showStudentForm ? (<div className="flex justify-end"><button onClick={() => setShowStudentForm(true)} className="bg-[#a51a8f] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#7d126b] shadow-lg shadow-[#a51a8f]/30 flex items-center gap-2 transition-all transform hover:scale-105"><UserPlus size={20} /> Registrar Novo Aluno</button></div>) : (<div className="bg-white p-6 rounded-2xl shadow-lg border border-[#a51a8f]/20 animate-slideUp relative"><div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4"><h3 className="font-bold text-lg text-slate-800 flex items-center gap-2"><UserPlus size={20} className="text-[#a51a8f]" /> Preencha os Dados do Novo Aluno</h3><button onClick={() => setShowStudentForm(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400"><X size={20} /></button></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div className="col-span-1 md:col-span-2 text-xs font-bold text-slate-400 uppercase tracking-wider mt-2">Dados do Aluno</div><div className="col-span-1 md:col-span-2 flex gap-4"><div className="flex-1"><input type="text" placeholder="Nome Completo" value={newStudentData.name} onChange={(e) => setNewStudentData({ ...newStudentData, name: e.target.value })} className="w-full border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /></div><div className="flex-1"><input type="text" placeholder="URL da Foto (Opcional)" value={newStudentData.photoUrl} onChange={(e) => setNewStudentData({ ...newStudentData, photoUrl: e.target.value })} className="w-full border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /></div></div><div className="flex gap-4"><input type="number" placeholder="Idade" value={newStudentData.age} onChange={(e) => setNewStudentData({ ...newStudentData, age: e.target.value })} className="w-1/3 border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /><select value={newStudentData.gender} onChange={(e) => setNewStudentData({ ...newStudentData, gender: e.target.value })} className="w-2/3 border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none"><option value="Masculino">Masculino</option><option value="Feminino">Feminino</option><option value="Outro">Outro</option></select></div><select value={newStudentData.schoolYear} onChange={(e) => setNewStudentData({ ...newStudentData, schoolYear: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none"><option value="6º Ano">6º Ano</option><option value="7º Ano">7º Ano</option><option value="8º Ano">8º Ano</option><option value="9º Ano">9º Ano</option></select><input type="text" placeholder="WhatsApp Aluno" value={newStudentData.studentPhone} onChange={(e) => setNewStudentData({ ...newStudentData, studentPhone: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /><div className="col-span-1 md:col-span-2 text-xs font-bold text-slate-400 uppercase tracking-wider mt-4">Dados do Responsável</div><input type="text" placeholder="Nome Responsável" value={newStudentData.parentName} onChange={(e) => setNewStudentData({ ...newStudentData, parentName: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /><input type="email" placeholder="Email Responsável" value={newStudentData.parentEmail} onChange={(e) => setNewStudentData({ ...newStudentData, parentEmail: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /><input type="text" placeholder="WhatsApp Responsável" value={newStudentData.parentPhone} onChange={(e) => setNewStudentData({ ...newStudentData, parentPhone: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /></div><div className="mt-8 flex justify-end gap-3 border-t border-slate-100 pt-4"><button onClick={() => setShowStudentForm(false)} className="px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors">Cancelar</button><button onClick={handleAddStudent} className="bg-[#a51a8f] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#7d126b] shadow-lg shadow-[#a51a8f]/30 flex items-center gap-2 transition-transform transform hover:scale-105 active:scale-95"><Save size={18} /> Salvar Cadastro</button></div></div>)}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"><table className="w-full text-left"><thead className="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th className="p-4">Aluno</th><th className="p-4">Código</th><th className="p-4">Ano</th><th className="p-4">Responsável</th><th className="p-4">XP</th></tr></thead><tbody className="divide-y divide-slate-100">{students.filter(s => s.role === 'student').map(st => (<tr key={st.id} className="hover:bg-slate-50 text-sm"><td className="p-4 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xl overflow-hidden shrink-0">{st.photoUrl ? <img src={st.photoUrl} alt={st.name} className="w-full h-full object-cover" /> : st.avatar}</div><div><p className="font-bold text-slate-700">{st.name}</p><p className="text-xs text-slate-400">{st.studentPhone || 'Sem cel'}</p></div></td><td className="p-4"><span className="font-mono bg-slate-100 px-2 py-1 rounded text-slate-600 font-bold">{st.userCode || 'N/A'}</span></td><td className="p-4"><span className="bg-[#fff9db] text-[#b89508] px-2 py-1 rounded text-xs font-bold border border-[#eec00a]">{st.schoolYear || '-'}</span></td><td className="p-4"><p className="text-slate-700">{st.parentName || '-'}</p><p className="text-xs text-slate-400">{st.parentPhone || '-'}</p></td><td className="p-4 font-bold text-[#a51a8f]">{st.xp}</td></tr>))}</tbody></table></div>
+            {!showStudentForm ? (<div className="flex justify-end"><button onClick={() => setShowStudentForm(true)} className="bg-[#a51a8f] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#7d126b] shadow-lg shadow-[#a51a8f]/30 flex items-center gap-2 transition-all transform hover:scale-105"><UserPlus size={20} /> Registrar Novo Aluno</button></div>) : (<div className="bg-white p-6 rounded-2xl shadow-lg border border-[#a51a8f]/20 animate-slideUp relative"><div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4"><h3 className="font-bold text-lg text-slate-800 flex items-center gap-2"><UserPlus size={20} className="text-[#a51a8f]" /> Preencha os Dados do Novo Aluno</h3><button onClick={() => setShowStudentForm(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400"><X size={20} /></button></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div className="col-span-1 md:col-span-2 text-xs font-bold text-slate-400 uppercase tracking-wider mt-2">Dados do Aluno</div><div className="col-span-1 md:col-span-2 flex gap-4"><div className="flex-1"><input type="text" placeholder="Nome Completo" value={newStudentData.name} onChange={(e) => setNewStudentData({ ...newStudentData, name: e.target.value })} className="w-full border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /></div><div className="flex-1"><input type="text" placeholder="URL da Foto (Opcional)" value={newStudentData.photoUrl} onChange={(e) => setNewStudentData({ ...newStudentData, photoUrl: e.target.value })} className="w-full border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /></div></div><div className="flex gap-4"><input type="number" placeholder="Idade" value={newStudentData.age} onChange={(e) => setNewStudentData({ ...newStudentData, age: e.target.value })} className="w-1/3 border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /><select value={newStudentData.gender} onChange={(e) => setNewStudentData({ ...newStudentData, gender: e.target.value })} className="w-2/3 border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none"><option value="Masculino">Masculino</option><option value="Feminino">Feminino</option><option value="Outro">Outro</option></select></div><select value={newStudentData.schoolYear} onChange={(e) => setNewStudentData({ ...newStudentData, schoolYear: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none"><option value="6Âº Ano">6Âº Ano</option><option value="7Âº Ano">7Âº Ano</option><option value="8Âº Ano">8Âº Ano</option><option value="9Âº Ano">9Âº Ano</option></select><input type="text" placeholder="WhatsApp Aluno" value={newStudentData.studentPhone} onChange={(e) => setNewStudentData({ ...newStudentData, studentPhone: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /><div className="col-span-1 md:col-span-2 text-xs font-bold text-slate-400 uppercase tracking-wider mt-4">Dados do ResponsÃ¡vel</div><input type="text" placeholder="Nome ResponsÃ¡vel" value={newStudentData.parentName} onChange={(e) => setNewStudentData({ ...newStudentData, parentName: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /><input type="email" placeholder="Email ResponsÃ¡vel" value={newStudentData.parentEmail} onChange={(e) => setNewStudentData({ ...newStudentData, parentEmail: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /><input type="text" placeholder="WhatsApp ResponsÃ¡vel" value={newStudentData.parentPhone} onChange={(e) => setNewStudentData({ ...newStudentData, parentPhone: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /></div><div className="mt-8 flex justify-end gap-3 border-t border-slate-100 pt-4"><button onClick={() => setShowStudentForm(false)} className="px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors">Cancelar</button><button onClick={handleAddStudent} className="bg-[#a51a8f] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#7d126b] shadow-lg shadow-[#a51a8f]/30 flex items-center gap-2 transition-transform transform hover:scale-105 active:scale-95"><Save size={18} /> Salvar Cadastro</button></div></div>)}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"><table className="w-full text-left"><thead className="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th className="p-4">Aluno</th><th className="p-4">CÃ³digo</th><th className="p-4">Ano</th><th className="p-4">ResponsÃ¡vel</th><th className="p-4">XP</th></tr></thead><tbody className="divide-y divide-slate-100">{students.filter(s => s.role === 'student').map(st => (<tr key={st.id} className="hover:bg-slate-50 text-sm"><td className="p-4 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xl overflow-hidden shrink-0">{st.photoUrl ? <img src={st.photoUrl} alt={st.name} className="w-full h-full object-cover" /> : st.avatar}</div><div><p className="font-bold text-slate-700">{st.name}</p><p className="text-xs text-slate-400">{st.studentPhone || 'Sem cel'}</p></div></td><td className="p-4"><span className="font-mono bg-slate-100 px-2 py-1 rounded text-slate-600 font-bold">{st.userCode || 'N/A'}</span></td><td className="p-4"><span className="bg-[#fff9db] text-[#b89508] px-2 py-1 rounded text-xs font-bold border border-[#eec00a]">{st.schoolYear || '-'}</span></td><td className="p-4"><p className="text-slate-700">{st.parentName || '-'}</p><p className="text-xs text-slate-400">{st.parentPhone || '-'}</p></td><td className="p-4 font-bold text-[#a51a8f]">{st.xp}</td></tr>))}</tbody></table></div>
           </div>
         );
       case 'classes':
         return (
           <div className="space-y-6 animate-fadeIn">
-            {editingClass && (<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"><div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-2xl animate-slideUp"><div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4"><h3 className="font-bold text-lg text-slate-800 flex items-center gap-2"><Edit size={20} className="text-[#a51a8f]" /> Editar / Reatribuir Aula</h3><button onClick={() => setEditingClass(null)}><X size={24} className="text-slate-400 hover:text-slate-600" /></button></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"><input type="text" placeholder="Título" value={editingClass.title} onChange={e => setEditingClass({ ...editingClass, title: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50" /><input type="text" placeholder="Data" value={editingClass.date} onChange={e => setEditingClass({ ...editingClass, date: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50" /><select value={editingClass.status} onChange={e => setEditingClass({ ...editingClass, status: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50"><option value="locked">Bloqueada</option><option value="soon">Em Breve</option><option value="live">Ao Vivo</option><option value="completed">Concluída</option></select><div className="flex items-center gap-2 bg-slate-50 border rounded-xl px-2"><Filter size={14} className="text-[#a51a8f]" /><select value={classFilterYear} onChange={(e) => setClassFilterYear(e.target.value)} className="bg-transparent text-sm focus:outline-none w-full py-2"><option value="Todos">Todos os Anos</option><option value="6º Ano">6º Ano</option><option value="7º Ano">7º Ano</option><option value="8º Ano">8º Ano</option><option value="9º Ano">9º Ano</option></select></div><div className="col-span-2"><label className="block text-sm font-bold text-slate-600 mb-2">Atribuir a:</label><div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border rounded-xl bg-slate-50">{students.filter(s => s.role === 'student' && (classFilterYear === 'Todos' || s.schoolYear === classFilterYear)).map(st => (<button key={st.id} onClick={() => { const current = editingClass.assignedTo || []; if (current.includes(st.id)) setEditingClass({ ...editingClass, assignedTo: current.filter(id => id !== st.id) }); else setEditingClass({ ...editingClass, assignedTo: [...current, st.id] }); }} className={`px-3 py-1 rounded-full text-xs border transition-all ${(editingClass.assignedTo || []).includes(st.id) ? 'bg-[#a51a8f] text-white border-[#a51a8f]' : 'bg-white text-slate-600 border-slate-300'}`}>{st.name} {st.schoolYear && <span className="opacity-70 text-[9px]">({st.schoolYear})</span>}</button>))}</div></div></div><div className="flex justify-end gap-3 mt-6"><button onClick={() => setEditingClass(null)} className="px-4 py-2 rounded-lg text-slate-500 hover:bg-slate-100">Cancelar</button><button onClick={handleUpdateClass} className="bg-[#a51a8f] text-white px-6 py-2 rounded-lg font-bold hover:bg-[#7d126b]">Salvar Alterações</button></div></div></div>)}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100"><h3 className="font-bold text-lg mb-4 text-slate-800">Criar Nova Aula</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"><input type="text" placeholder="Título da Aula" className="border rounded-xl px-4 py-2" value={newClass.title} onChange={e => setNewClass({ ...newClass, title: e.target.value })} /><input type="text" placeholder="Data (ex: 25/10 - 14:00)" className="border rounded-xl px-4 py-2" value={newClass.date} onChange={e => setNewClass({ ...newClass, date: e.target.value })} /><input type="text" placeholder="Link da Aula (Meet ou Vídeo)" className="border rounded-xl px-4 py-2 col-span-2" value={newClass.link} onChange={e => setNewClass({ ...newClass, link: e.target.value })} /><textarea placeholder="Descrição da aula..." className="border rounded-xl px-4 py-2 col-span-2" value={newClass.description} onChange={e => setNewClass({ ...newClass, description: e.target.value })}></textarea><div className="col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-200"><label className="block text-sm font-bold text-slate-600 mb-2 flex items-center gap-2"><Paperclip size={16} /> Materiais de Apoio / Anexos</label><div className="flex gap-2 mb-2"><input type="text" placeholder="Título (ex: PDF Slides)" className="flex-1 border rounded-lg px-3 py-2 text-sm" value={materialInput.title} onChange={e => setMaterialInput({ ...materialInput, title: e.target.value })} /><select className="border rounded-lg px-3 py-2 text-sm bg-white" value={materialInput.type} onChange={e => setMaterialInput({ ...materialInput, type: e.target.value })}><option value="pdf">PDF</option><option value="video">Vídeo</option><option value="link">Link</option></select></div><div className="flex gap-2 mb-3"><input type="text" placeholder="URL do Arquivo/Link" className="flex-1 border rounded-lg px-3 py-2 text-sm" value={materialInput.url} onChange={e => setMaterialInput({ ...materialInput, url: e.target.value })} /><button onClick={handleAddMaterialToClass} className="bg-slate-700 text-white px-4 rounded-lg text-sm font-bold hover:bg-slate-800">Add</button></div>{newClass.materials.length > 0 && (<div className="flex flex-wrap gap-2 mt-2">{newClass.materials.map((mat, idx) => (<div key={idx} className="flex items-center gap-2 bg-white px-3 py-1 rounded-lg border border-slate-200 text-sm text-slate-700">{mat.type === 'pdf' ? <FileText size={14} /> : mat.type === 'video' ? <PlayCircle size={14} /> : <LinkIcon size={14} />}<span className="truncate max-w-[150px]">{mat.title}</span><button onClick={() => handleRemoveMaterialFromClass(idx)} className="text-red-400 hover:text-red-600 ml-1"><X size={14} /></button></div>))}</div>)}</div><div className="col-span-2"><div className="flex justify-between items-center mb-2"><label className="block text-sm font-bold text-slate-600">Atribuir a (Opcional - Deixe vazio para todos):</label><div className="flex items-center gap-2"><Filter size={16} className="text-[#a51a8f]" /><select value={classFilterYear} onChange={(e) => setClassFilterYear(e.target.value)} className="text-sm border rounded-lg px-2 py-1 bg-slate-50 focus:border-[#a51a8f] focus:outline-none"><option value="Todos">Todos os Anos</option><option value="6º Ano">6º Ano</option><option value="7º Ano">7º Ano</option><option value="8º Ano">8º Ano</option><option value="9º Ano">9º Ano</option></select></div></div><div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">{students.filter(s => s.role === 'student').filter(s => classFilterYear === 'Todos' || s.schoolYear === classFilterYear).map(st => (<button key={st.id} onClick={() => { const current = newClass.assignedTo; if (current.includes(st.id)) setNewClass({ ...newClass, assignedTo: current.filter(id => id !== st.id) }); else setNewClass({ ...newClass, assignedTo: [...current, st.id] }); }} className={`px-3 py-1 rounded-full text-xs border transition-all ${newClass.assignedTo.includes(st.id) ? 'bg-[#a51a8f] text-white border-[#a51a8f] shadow-sm scale-105' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}>{st.name} {st.schoolYear && <span className="opacity-70 text-[9px]">({st.schoolYear})</span>}</button>))}</div></div></div><button onClick={handleAddClass} className="w-full bg-[#a51a8f] text-white py-3 rounded-xl font-bold hover:bg-[#7d126b]">Publicar Aula</button></div>
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"><div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center"><h3 className="font-bold text-slate-700 flex items-center gap-2"><Video size={18} className="text-[#a51a8f]" />Gerenciar Aulas</h3><span className="text-xs font-bold text-slate-400 uppercase">{classes.length} Aulas</span></div><table className="w-full text-left"><thead className="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th className="p-4">Código</th><th className="p-4">Título</th><th className="p-4">Criado Por</th><th className="p-4">Status</th><th className="p-4 text-right">Ações</th></tr></thead><tbody className="divide-y divide-slate-100">{classes.map(cls => (<tr key={cls.id} className="hover:bg-slate-50 text-sm"><td className="p-4"><span className="font-mono bg-slate-100 px-2 py-1 rounded text-slate-600 font-bold">{cls.classCode || '-'}</span></td><td className="p-4 font-bold text-slate-700">{cls.title}</td><td className="p-4 text-slate-500 italic">{cls.createdBy || 'Sistema'}</td><td className="p-4"><span className={`px-2 py-1 rounded text-xs font-bold ${cls.status === 'live' ? 'bg-red-100 text-red-600' : cls.status === 'completed' ? 'bg-green-100 text-green-600' : cls.status === 'soon' ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-200 text-slate-600'}`}>{cls.status.toUpperCase()}</span></td><td className="p-4 text-right"><div className="flex justify-end gap-2"><button onClick={() => setEditingClass(cls)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg" title="Editar"><Edit size={16} /></button><button onClick={() => handleDuplicateClass(cls)} className="p-2 text-slate-400 hover:text-[#a51a8f] hover:bg-[#fdf2fa] rounded-lg" title="Duplicar"><Copy size={16} /></button><button onClick={() => handleDeleteClass(cls.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg" title="Excluir"><Trash2 size={16} /></button></div></td></tr>))}</tbody></table></div>
+            {editingClass && (<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"><div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-2xl animate-slideUp"><div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4"><h3 className="font-bold text-lg text-slate-800 flex items-center gap-2"><Edit size={20} className="text-[#a51a8f]" /> Editar / Reatribuir Aula</h3><button onClick={() => setEditingClass(null)}><X size={24} className="text-slate-400 hover:text-slate-600" /></button></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"><input type="text" placeholder="TÃ­tulo" value={editingClass.title} onChange={e => setEditingClass({ ...editingClass, title: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50" /><input type="text" placeholder="Data" value={editingClass.date} onChange={e => setEditingClass({ ...editingClass, date: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50" /><select value={editingClass.status} onChange={e => setEditingClass({ ...editingClass, status: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50"><option value="locked">Bloqueada</option><option value="soon">Em Breve</option><option value="live">Ao Vivo</option><option value="completed">ConcluÃ­da</option></select><div className="flex items-center gap-2 bg-slate-50 border rounded-xl px-2"><Filter size={14} className="text-[#a51a8f]" /><select value={classFilterYear} onChange={(e) => setClassFilterYear(e.target.value)} className="bg-transparent text-sm focus:outline-none w-full py-2"><option value="Todos">Todos os Anos</option><option value="6Âº Ano">6Âº Ano</option><option value="7Âº Ano">7Âº Ano</option><option value="8Âº Ano">8Âº Ano</option><option value="9Âº Ano">9Âº Ano</option></select></div><div className="col-span-2"><label className="block text-sm font-bold text-slate-600 mb-2">Atribuir a:</label><div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border rounded-xl bg-slate-50">{students.filter(s => s.role === 'student' && (classFilterYear === 'Todos' || s.schoolYear === classFilterYear)).map(st => (<button key={st.id} onClick={() => { const current = editingClass.assignedTo || []; if (current.includes(st.id)) setEditingClass({ ...editingClass, assignedTo: current.filter(id => id !== st.id) }); else setEditingClass({ ...editingClass, assignedTo: [...current, st.id] }); }} className={`px-3 py-1 rounded-full text-xs border transition-all ${(editingClass.assignedTo || []).includes(st.id) ? 'bg-[#a51a8f] text-white border-[#a51a8f]' : 'bg-white text-slate-600 border-slate-300'}`}>{st.name} {st.schoolYear && <span className="opacity-70 text-[9px]">({st.schoolYear})</span>}</button>))}</div></div></div><div className="flex justify-end gap-3 mt-6"><button onClick={() => setEditingClass(null)} className="px-4 py-2 rounded-lg text-slate-500 hover:bg-slate-100">Cancelar</button><button onClick={handleUpdateClass} className="bg-[#a51a8f] text-white px-6 py-2 rounded-lg font-bold hover:bg-[#7d126b]">Salvar AlteraÃ§Ãµes</button></div></div></div>)}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100"><h3 className="font-bold text-lg mb-4 text-slate-800">Criar Nova Aula</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"><input type="text" placeholder="TÃ­tulo da Aula" className="border rounded-xl px-4 py-2" value={newClass.title} onChange={e => setNewClass({ ...newClass, title: e.target.value })} /><input type="text" placeholder="Data (ex: 25/10 - 14:00)" className="border rounded-xl px-4 py-2" value={newClass.date} onChange={e => setNewClass({ ...newClass, date: e.target.value })} /><input type="text" placeholder="Link da Aula (Meet ou VÃ­deo)" className="border rounded-xl px-4 py-2 col-span-2" value={newClass.link} onChange={e => setNewClass({ ...newClass, link: e.target.value })} /><textarea placeholder="DescriÃ§Ã£o da aula..." className="border rounded-xl px-4 py-2 col-span-2" value={newClass.description} onChange={e => setNewClass({ ...newClass, description: e.target.value })}></textarea><div className="col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-200"><label className="block text-sm font-bold text-slate-600 mb-2 flex items-center gap-2"><Paperclip size={16} /> Materiais de Apoio / Anexos</label><div className="flex gap-2 mb-2"><input type="text" placeholder="TÃ­tulo (ex: PDF Slides)" className="flex-1 border rounded-lg px-3 py-2 text-sm" value={materialInput.title} onChange={e => setMaterialInput({ ...materialInput, title: e.target.value })} /><select className="border rounded-lg px-3 py-2 text-sm bg-white" value={materialInput.type} onChange={e => setMaterialInput({ ...materialInput, type: e.target.value })}><option value="pdf">PDF</option><option value="video">VÃ­deo</option><option value="link">Link</option></select></div><div className="flex gap-2 mb-3"><input type="text" placeholder="URL do Arquivo/Link" className="flex-1 border rounded-lg px-3 py-2 text-sm" value={materialInput.url} onChange={e => setMaterialInput({ ...materialInput, url: e.target.value })} /><button onClick={handleAddMaterialToClass} className="bg-slate-700 text-white px-4 rounded-lg text-sm font-bold hover:bg-slate-800">Add</button></div>{newClass.materials.length > 0 && (<div className="flex flex-wrap gap-2 mt-2">{newClass.materials.map((mat, idx) => (<div key={idx} className="flex items-center gap-2 bg-white px-3 py-1 rounded-lg border border-slate-200 text-sm text-slate-700">{mat.type === 'pdf' ? <FileText size={14} /> : mat.type === 'video' ? <PlayCircle size={14} /> : <LinkIcon size={14} />}<span className="truncate max-w-[150px]">{mat.title}</span><button onClick={() => handleRemoveMaterialFromClass(idx)} className="text-red-400 hover:text-red-600 ml-1"><X size={14} /></button></div>))}</div>)}</div><div className="col-span-2"><div className="flex justify-between items-center mb-2"><label className="block text-sm font-bold text-slate-600">Atribuir a (Opcional - Deixe vazio para todos):</label><div className="flex items-center gap-2"><Filter size={16} className="text-[#a51a8f]" /><select value={classFilterYear} onChange={(e) => setClassFilterYear(e.target.value)} className="text-sm border rounded-lg px-2 py-1 bg-slate-50 focus:border-[#a51a8f] focus:outline-none"><option value="Todos">Todos os Anos</option><option value="6Âº Ano">6Âº Ano</option><option value="7Âº Ano">7Âº Ano</option><option value="8Âº Ano">8Âº Ano</option><option value="9Âº Ano">9Âº Ano</option></select></div></div><div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">{students.filter(s => s.role === 'student').filter(s => classFilterYear === 'Todos' || s.schoolYear === classFilterYear).map(st => (<button key={st.id} onClick={() => { const current = newClass.assignedTo; if (current.includes(st.id)) setNewClass({ ...newClass, assignedTo: current.filter(id => id !== st.id) }); else setNewClass({ ...newClass, assignedTo: [...current, st.id] }); }} className={`px-3 py-1 rounded-full text-xs border transition-all ${newClass.assignedTo.includes(st.id) ? 'bg-[#a51a8f] text-white border-[#a51a8f] shadow-sm scale-105' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}>{st.name} {st.schoolYear && <span className="opacity-70 text-[9px]">({st.schoolYear})</span>}</button>))}</div></div></div><button onClick={handleAddClass} className="w-full bg-[#a51a8f] text-white py-3 rounded-xl font-bold hover:bg-[#7d126b]">Publicar Aula</button></div>
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"><div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center"><h3 className="font-bold text-slate-700 flex items-center gap-2"><Video size={18} className="text-[#a51a8f]" />Gerenciar Aulas</h3><span className="text-xs font-bold text-slate-400 uppercase">{classes.length} Aulas</span></div><table className="w-full text-left"><thead className="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th className="p-4">CÃ³digo</th><th className="p-4">TÃ­tulo</th><th className="p-4">Criado Por</th><th className="p-4">Status</th><th className="p-4 text-right">AÃ§Ãµes</th></tr></thead><tbody className="divide-y divide-slate-100">{classes.map(cls => (<tr key={cls.id} className="hover:bg-slate-50 text-sm"><td className="p-4"><span className="font-mono bg-slate-100 px-2 py-1 rounded text-slate-600 font-bold">{cls.classCode || '-'}</span></td><td className="p-4 font-bold text-slate-700">{cls.title}</td><td className="p-4 text-slate-500 italic">{cls.createdBy || 'Sistema'}</td><td className="p-4"><span className={`px-2 py-1 rounded text-xs font-bold ${cls.status === 'live' ? 'bg-red-100 text-red-600' : cls.status === 'completed' ? 'bg-green-100 text-green-600' : cls.status === 'soon' ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-200 text-slate-600'}`}>{cls.status.toUpperCase()}</span></td><td className="p-4 text-right"><div className="flex justify-end gap-2"><button onClick={() => setEditingClass(cls)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg" title="Editar"><Edit size={16} /></button><button onClick={() => handleDuplicateClass(cls)} className="p-2 text-slate-400 hover:text-[#a51a8f] hover:bg-[#fdf2fa] rounded-lg" title="Duplicar"><Copy size={16} /></button><button onClick={() => handleDeleteClass(cls.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg" title="Excluir"><Trash2 size={16} /></button></div></td></tr>))}</tbody></table></div>
           </div>
         );
       case 'challenges':
@@ -992,20 +1094,20 @@ const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogout }) =
               <div className="flex justify-end"><button onClick={() => { setNewChallenge({ id: null, title: '', xpReward: 50, coinReward: 5, questions: [], assignedTo: [], deadline: '' }); setShowChallengeForm(true); }} className="bg-[#a51a8f] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#7d126b] shadow-lg shadow-[#a51a8f]/30 flex items-center gap-2 transition-all transform hover:scale-105"><PlusCircle size={20} /> Criar Novo Desafio</button></div>
             ) : (
               <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden animate-slideUp">
-                <div className="bg-[#2d1b36] p-6 text-white"><div className="flex justify-between items-start mb-4"><h2 className="text-xl font-bold">{newChallenge.id ? 'Editar Desafio' : 'Criador de Desafios'}</h2><button onClick={() => setShowChallengeForm(false)} className="hover:bg-white/10 p-2 rounded-full"><X /></button></div><input type="text" placeholder="Título do Desafio (ex: Quiz de Verbos)" className="w-full bg-transparent text-2xl font-bold placeholder-white/40 focus:outline-none border-b border-white/20 pb-2 mb-4" value={newChallenge.title} onChange={e => setNewChallenge({ ...newChallenge, title: e.target.value })} /><div className="flex flex-wrap gap-4 mb-4"><div className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-lg"><span className="text-sm font-bold text-[#eec00a]">XP</span><input type="number" className="bg-transparent w-16 text-white font-mono focus:outline-none" value={newChallenge.xpReward} onChange={e => setNewChallenge({ ...newChallenge, xpReward: parseInt(e.target.value) })} /></div><div className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-lg"><Star size={14} className="text-[#eec00a] fill-[#eec00a]" /><input type="number" className="bg-transparent w-16 text-white font-mono focus:outline-none" value={newChallenge.coinReward} onChange={e => setNewChallenge({ ...newChallenge, coinReward: parseInt(e.target.value) })} /></div><div className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-lg"><Clock size={16} className="text-[#eec00a]" /><input type="datetime-local" className="bg-transparent text-white text-xs focus:outline-none" value={newChallenge.deadline} onChange={e => setNewChallenge({ ...newChallenge, deadline: e.target.value })} /></div></div><div className="mt-4 pt-4 border-t border-white/10"><div className="flex justify-between items-center mb-2"><label className="text-xs font-bold uppercase tracking-wider text-white/70">Atribuir a (Opcional - Vazio = Todos):</label><div className="flex items-center gap-2"><Filter size={14} className="text-[#eec00a]" /><select value={classFilterYear} onChange={(e) => setClassFilterYear(e.target.value)} className="text-xs bg-white/20 border-none rounded px-2 py-1 text-white focus:outline-none"><option className="text-slate-800" value="Todos">Todos</option><option className="text-slate-800" value="6º Ano">6º Ano</option><option className="text-slate-800" value="7º Ano">7º Ano</option><option className="text-slate-800" value="8º Ano">8º Ano</option><option className="text-slate-800" value="9º Ano">9º Ano</option></select></div></div><div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto">{students.filter(s => s.role === 'student' && (classFilterYear === 'Todos' || s.schoolYear === classFilterYear)).map(st => (<button key={st.id} onClick={() => { const current = newChallenge.assignedTo || []; if (current.includes(st.id)) setNewChallenge({ ...newChallenge, assignedTo: current.filter(id => id !== st.id) }); else setNewChallenge({ ...newChallenge, assignedTo: [...current, st.id] }); }} className={`px-3 py-1 rounded-full text-xs border transition-all ${(newChallenge.assignedTo || []).includes(st.id) ? 'bg-[#eec00a] text-[#2d1b36] border-[#eec00a] font-bold' : 'bg-white/10 text-white/70 border-white/20 hover:bg-white/20'}`}>{st.name}</button>))}</div></div></div>
-                <div className="p-6 bg-slate-50 border-b border-slate-200">{newChallenge.questions.length === 0 ? (<p className="text-center text-slate-400 py-4">Nenhuma questão adicionada ainda.</p>) : (<div className="space-y-4">{newChallenge.questions.map((q, idx) => (<div key={idx} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative group"><div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => setNewChallenge({ ...newChallenge, questions: newChallenge.questions.filter((_, i) => i !== idx) })} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button></div><div className="flex items-center gap-2 mb-2"><span className="bg-slate-100 text-slate-500 text-xs font-bold px-2 py-1 rounded uppercase">{q.type}</span></div><p className="font-bold text-slate-800">{idx + 1}. {q.q}</p></div>))}</div>)}</div>
-                <div className="p-6"><h4 className="font-bold text-slate-700 mb-4 flex items-center gap-2">Adicionar Questão</h4><div className="flex gap-4 mb-4"><div className="w-1/3"><label className="block text-xs font-bold text-slate-400 uppercase mb-1">Tipo</label><div className="space-y-2"><button onClick={() => setCurrentQuestion({ ...currentQuestion, type: 'multiple_choice' })} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-sm text-left ${currentQuestion.type === 'multiple_choice' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'hover:bg-slate-50'}`}><CheckSquare size={16} /> Múltipla Escolha</button><button onClick={() => setCurrentQuestion({ ...currentQuestion, type: 'true_false' })} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-sm text-left ${currentQuestion.type === 'true_false' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'hover:bg-slate-50'}`}><Check size={16} /> Verdadeiro / Falso</button><button onClick={() => setCurrentQuestion({ ...currentQuestion, type: 'short_answer' })} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-sm text-left ${currentQuestion.type === 'short_answer' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'hover:bg-slate-50'}`}><Type size={16} /> Resposta Curta</button><button onClick={() => setCurrentQuestion({ ...currentQuestion, type: 'long_answer' })} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-sm text-left ${currentQuestion.type === 'long_answer' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'hover:bg-slate-50'}`}><AlignLeft size={16} /> Resposta Longa</button></div></div><div className="w-2/3 space-y-4"><div><label className="block text-xs font-bold text-slate-400 uppercase mb-1">Enunciado</label><textarea className="w-full border rounded-xl p-3 focus:border-[#a51a8f] focus:outline-none" rows={2} placeholder="Digite a pergunta aqui..." value={currentQuestion.text} onChange={e => setCurrentQuestion({ ...currentQuestion, text: e.target.value })}></textarea></div>{currentQuestion.type === 'multiple_choice' && (<div className="bg-slate-50 p-4 rounded-xl border border-slate-200"><label className="block text-xs font-bold text-slate-400 uppercase mb-2">Opções (Marque a correta)</label>{currentQuestion.options.map((opt, idx) => (<div key={idx} className="flex gap-2 mb-2"><input type="radio" name="correctOpt" checked={currentQuestion.correctAnswer === opt && opt !== ''} onChange={() => setCurrentQuestion({ ...currentQuestion, correctAnswer: opt })} className="mt-2" /><input type="text" className="flex-1 border rounded-lg px-3 py-1.5 text-sm" placeholder={`Opção ${idx + 1}`} value={opt} onChange={(e) => { const newOpts = [...currentQuestion.options]; newOpts[idx] = e.target.value; const newCorrect = currentQuestion.correctAnswer === opt ? e.target.value : currentQuestion.correctAnswer; setCurrentQuestion({ ...currentQuestion, options: newOpts, correctAnswer: newCorrect }); }} /></div>))}<button onClick={() => setCurrentQuestion({ ...currentQuestion, options: [...currentQuestion.options, ''] })} className="text-xs font-bold text-[#a51a8f] hover:underline mt-1">+ Adicionar Opção</button></div>)}{currentQuestion.type === 'true_false' && (<div className="flex gap-4"><button onClick={() => setCurrentQuestion({ ...currentQuestion, correctAnswer: 'Verdadeiro' })} className={`flex-1 py-3 rounded-xl border font-bold transition-all ${currentQuestion.correctAnswer === 'Verdadeiro' ? 'bg-green-100 border-green-500 text-green-700' : 'hover:bg-slate-50'}`}>Verdadeiro</button><button onClick={() => setCurrentQuestion({ ...currentQuestion, correctAnswer: 'Falso' })} className={`flex-1 py-3 rounded-xl border font-bold transition-all ${currentQuestion.correctAnswer === 'Falso' ? 'bg-red-100 border-red-500 text-red-700' : 'hover:bg-slate-50'}`}>Falso</button></div>)}{(currentQuestion.type === 'short_answer' || currentQuestion.type === 'long_answer') && (<div><label className="block text-xs font-bold text-slate-400 uppercase mb-1">{currentQuestion.type === 'short_answer' ? 'Resposta Correta (Exata)' : 'Resposta Modelo (Opcional)'}</label><input type="text" className="w-full border rounded-xl px-4 py-2" placeholder="Digite a resposta esperada..." value={currentQuestion.correctAnswer} onChange={e => setCurrentQuestion({ ...currentQuestion, correctAnswer: e.target.value })} /></div>)}<button onClick={addQuestionToChallenge} className="w-full py-3 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-700 flex justify-center items-center gap-2"><Plus size={18} /> Adicionar Questão ao Desafio</button></div></div></div><div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-end gap-3"><button onClick={() => setShowChallengeForm(false)} className="px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-200">Cancelar</button><button onClick={saveChallenge} className="bg-[#a51a8f] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#7d126b] shadow-lg">Salvar Desafio</button></div></div>
+                <div className="bg-[#2d1b36] p-6 text-white"><div className="flex justify-between items-start mb-4"><h2 className="text-xl font-bold">{newChallenge.id ? 'Editar Desafio' : 'Criador de Desafios'}</h2><button onClick={() => setShowChallengeForm(false)} className="hover:bg-white/10 p-2 rounded-full"><X /></button></div><input type="text" placeholder="TÃ­tulo do Desafio (ex: Quiz de Verbos)" className="w-full bg-transparent text-2xl font-bold placeholder-white/40 focus:outline-none border-b border-white/20 pb-2 mb-4" value={newChallenge.title} onChange={e => setNewChallenge({ ...newChallenge, title: e.target.value })} /><div className="flex flex-wrap gap-4 mb-4"><div className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-lg"><span className="text-sm font-bold text-[#eec00a]">XP</span><input type="number" className="bg-transparent w-16 text-white font-mono focus:outline-none" value={newChallenge.xpReward} onChange={e => setNewChallenge({ ...newChallenge, xpReward: parseInt(e.target.value) })} /></div><div className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-lg"><Star size={14} className="text-[#eec00a] fill-[#eec00a]" /><input type="number" className="bg-transparent w-16 text-white font-mono focus:outline-none" value={newChallenge.coinReward} onChange={e => setNewChallenge({ ...newChallenge, coinReward: parseInt(e.target.value) })} /></div><div className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-lg"><Clock size={16} className="text-[#eec00a]" /><input type="datetime-local" className="bg-transparent text-white text-xs focus:outline-none" value={newChallenge.deadline} onChange={e => setNewChallenge({ ...newChallenge, deadline: e.target.value })} /></div><div className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-lg"><Clock size={16} className="text-[#eec00a]" /><input type="number" placeholder="Minutos (Opcional)" className="bg-transparent text-white text-xs focus:outline-none w-28" value={newChallenge.timeLimit} onChange={e => setNewChallenge({ ...newChallenge, timeLimit: e.target.value })} /></div></div><div className="mt-4 pt-4 border-t border-white/10"><div className="flex justify-between items-center mb-2"><label className="text-xs font-bold uppercase tracking-wider text-white/70">Atribuir a (Opcional - Vazio = Todos):</label><div className="flex items-center gap-2"><Filter size={14} className="text-[#eec00a]" /><select value={classFilterYear} onChange={(e) => setClassFilterYear(e.target.value)} className="text-xs bg-white/20 border-none rounded px-2 py-1 text-white focus:outline-none"><option className="text-slate-800" value="Todos">Todos</option><option className="text-slate-800" value="6Âº Ano">6Âº Ano</option><option className="text-slate-800" value="7Âº Ano">7Âº Ano</option><option className="text-slate-800" value="8Âº Ano">8Âº Ano</option><option className="text-slate-800" value="9Âº Ano">9Âº Ano</option></select></div></div><div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto">{students.filter(s => s.role === 'student' && (classFilterYear === 'Todos' || s.schoolYear === classFilterYear)).map(st => (<button key={st.id} onClick={() => { const current = newChallenge.assignedTo || []; if (current.includes(st.id)) setNewChallenge({ ...newChallenge, assignedTo: current.filter(id => id !== st.id) }); else setNewChallenge({ ...newChallenge, assignedTo: [...current, st.id] }); }} className={`px-3 py-1 rounded-full text-xs border transition-all ${(newChallenge.assignedTo || []).includes(st.id) ? 'bg-[#eec00a] text-[#2d1b36] border-[#eec00a] font-bold' : 'bg-white/10 text-white/70 border-white/20 hover:bg-white/20'}`}>{st.name}</button>))}</div></div></div>
+                <div className="p-6 bg-slate-50 border-b border-slate-200">{newChallenge.questions.length === 0 ? (<p className="text-center text-slate-400 py-4">Nenhuma questÃ£o adicionada ainda.</p>) : (<div className="space-y-4">{newChallenge.questions.map((q, idx) => (<div key={idx} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative group"><div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => setNewChallenge({ ...newChallenge, questions: newChallenge.questions.filter((_, i) => i !== idx) })} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button></div><div className="flex items-center gap-2 mb-2"><span className="bg-slate-100 text-slate-500 text-xs font-bold px-2 py-1 rounded uppercase">{q.type}</span></div><p className="font-bold text-slate-800">{idx + 1}. {q.q}</p></div>))}</div>)}</div>
+                <div className="p-6"><h4 className="font-bold text-slate-700 mb-4 flex items-center gap-2">Adicionar QuestÃ£o</h4><div className="flex gap-4 mb-4"><div className="w-1/3"><label className="block text-xs font-bold text-slate-400 uppercase mb-1">Tipo</label><div className="space-y-2"><button onClick={() => setCurrentQuestion({ ...currentQuestion, type: 'multiple_choice' })} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-sm text-left ${currentQuestion.type === 'multiple_choice' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'hover:bg-slate-50'}`}><CheckSquare size={16} /> MÃºltipla Escolha</button><button onClick={() => setCurrentQuestion({ ...currentQuestion, type: 'true_false' })} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-sm text-left ${currentQuestion.type === 'true_false' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'hover:bg-slate-50'}`}><Check size={16} /> Verdadeiro / Falso</button><button onClick={() => setCurrentQuestion({ ...currentQuestion, type: 'short_answer' })} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-sm text-left ${currentQuestion.type === 'short_answer' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'hover:bg-slate-50'}`}><Type size={16} /> Resposta Curta</button><button onClick={() => setCurrentQuestion({ ...currentQuestion, type: 'long_answer' })} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-sm text-left ${currentQuestion.type === 'long_answer' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'hover:bg-slate-50'}`}><AlignLeft size={16} /> Resposta Longa</button></div></div><div className="w-2/3 space-y-4"><div><label className="block text-xs font-bold text-slate-400 uppercase mb-1">Enunciado</label><textarea className="w-full border rounded-xl p-3 focus:border-[#a51a8f] focus:outline-none" rows={2} placeholder="Digite a pergunta aqui..." value={currentQuestion.text} onChange={e => setCurrentQuestion({ ...currentQuestion, text: e.target.value })}></textarea></div>{currentQuestion.type === 'multiple_choice' && (<div className="bg-slate-50 p-4 rounded-xl border border-slate-200"><label className="block text-xs font-bold text-slate-400 uppercase mb-2">OpÃ§Ãµes (Marque a correta)</label>{currentQuestion.options.map((opt, idx) => (<div key={idx} className="flex gap-2 mb-2"><input type="radio" name="correctOpt" checked={currentQuestion.correctAnswer === opt && opt !== ''} onChange={() => setCurrentQuestion({ ...currentQuestion, correctAnswer: opt })} className="mt-2" /><input type="text" className="flex-1 border rounded-lg px-3 py-1.5 text-sm" placeholder={`OpÃ§Ã£o ${idx + 1}`} value={opt} onChange={(e) => { const newOpts = [...currentQuestion.options]; newOpts[idx] = e.target.value; const newCorrect = currentQuestion.correctAnswer === opt ? e.target.value : currentQuestion.correctAnswer; setCurrentQuestion({ ...currentQuestion, options: newOpts, correctAnswer: newCorrect }); }} /></div>))}<button onClick={() => setCurrentQuestion({ ...currentQuestion, options: [...currentQuestion.options, ''] })} className="text-xs font-bold text-[#a51a8f] hover:underline mt-1">+ Adicionar OpÃ§Ã£o</button></div>)}{currentQuestion.type === 'true_false' && (<div className="flex gap-4"><button onClick={() => setCurrentQuestion({ ...currentQuestion, correctAnswer: 'Verdadeiro' })} className={`flex-1 py-3 rounded-xl border font-bold transition-all ${currentQuestion.correctAnswer === 'Verdadeiro' ? 'bg-green-100 border-green-500 text-green-700' : 'hover:bg-slate-50'}`}>Verdadeiro</button><button onClick={() => setCurrentQuestion({ ...currentQuestion, correctAnswer: 'Falso' })} className={`flex-1 py-3 rounded-xl border font-bold transition-all ${currentQuestion.correctAnswer === 'Falso' ? 'bg-red-100 border-red-500 text-red-700' : 'hover:bg-slate-50'}`}>Falso</button></div>)}{(currentQuestion.type === 'short_answer' || currentQuestion.type === 'long_answer') && (<div><label className="block text-xs font-bold text-slate-400 uppercase mb-1">{currentQuestion.type === 'short_answer' ? 'Resposta Correta (Exata)' : 'Resposta Modelo (Opcional)'}</label><input type="text" className="w-full border rounded-xl px-4 py-2" placeholder="Digite a resposta esperada..." value={currentQuestion.correctAnswer} onChange={e => setCurrentQuestion({ ...currentQuestion, correctAnswer: e.target.value })} /></div>)}<button onClick={addQuestionToChallenge} className="w-full py-3 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-700 flex justify-center items-center gap-2"><Plus size={18} /> Adicionar QuestÃ£o ao Desafio</button></div></div></div><div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-end gap-3"><button onClick={() => setShowChallengeForm(false)} className="px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-200">Cancelar</button><button onClick={saveChallenge} className="bg-[#a51a8f] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#7d126b] shadow-lg">Salvar Desafio</button></div></div>
             )}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mt-8">
               <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center"><h3 className="font-bold text-slate-700 flex items-center gap-2"><Gamepad2 size={18} className="text-[#a51a8f]" />Gerenciar Desafios</h3><span className="text-xs font-bold text-slate-400 uppercase">{quizzes.length} Desafios</span></div>
               <table className="w-full text-left">
                 <thead className="bg-slate-50 text-slate-500 text-xs uppercase">
                   <tr>
-                    <th className="p-4">Título</th>
-                    <th className="p-4">Código</th>
+                    <th className="p-4">TÃ­tulo</th>
+                    <th className="p-4">CÃ³digo</th>
                     <th className="p-4">Criado Por</th>
                     <th className="p-4">XP</th>
-                    <th className="p-4 text-right">Ações</th>
+                    <th className="p-4 text-right">AÃ§Ãµes</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -1031,7 +1133,7 @@ const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogout }) =
       case 'financial':
         if (currentUser.role !== 'admin') return <div className="p-8 text-center text-red-500 flex flex-col items-center"><ShieldAlert size={48} className="mb-4" /> Acesso Negado: Apenas o Diretor tem acesso ao financeiro.</div>;
         return (
-          <div className="bg-white p-8 rounded-2xl text-center animate-fadeIn border border-slate-200"><div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600"><DollarSign size={40} /></div><h2 className="text-2xl font-bold text-slate-800 mb-2">Painel Financeiro</h2><p className="text-slate-500 mb-8">Resumo de mensalidades e pagamentos.</p><div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left"><div className="p-4 border border-slate-100 rounded-xl bg-slate-50"><p className="text-xs text-slate-400 uppercase font-bold">Faturamento Previsto</p><p className="text-2xl font-bold text-slate-800">R$ {totalRevenue},00</p></div><div className="p-4 border border-slate-100 rounded-xl bg-slate-50"><p className="text-xs text-slate-400 uppercase font-bold">Inadimplência</p><p className="text-2xl font-bold text-red-500">0%</p></div></div></div>
+          <div className="bg-white p-8 rounded-2xl text-center animate-fadeIn border border-slate-200"><div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600"><DollarSign size={40} /></div><h2 className="text-2xl font-bold text-slate-800 mb-2">Painel Financeiro</h2><p className="text-slate-500 mb-8">Resumo de mensalidades e pagamentos.</p><div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left"><div className="p-4 border border-slate-100 rounded-xl bg-slate-50"><p className="text-xs text-slate-400 uppercase font-bold">Faturamento Previsto</p><p className="text-2xl font-bold text-slate-800">R$ {totalRevenue},00</p></div><div className="p-4 border border-slate-100 rounded-xl bg-slate-50"><p className="text-xs text-slate-400 uppercase font-bold">InadimplÃªncia</p><p className="text-2xl font-bold text-red-500">0%</p></div></div></div>
         );
       case 'calendar':
         return <ViewCalendar classes={classes} />;
@@ -1044,14 +1146,61 @@ const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogout }) =
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col md:flex-row">
-      <aside className="hidden md:flex flex-col w-64 bg-[#2d1b36] text-white h-screen sticky top-0"><div className="p-6 border-b border-white/10 flex flex-col items-center justify-center"><div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-3xl mb-3">{currentUser.avatar}</div><div className="text-center"><h1 className="font-bold text-lg text-[#eec00a]">{currentUser.name}</h1><p className="text-xs text-white/50 uppercase tracking-widest">{currentUser.role === 'admin' ? 'Diretoria' : 'Professor'}</p></div></div><nav className="flex-1 p-4 space-y-2"><NavButton active={currentView === 'overview'} onClick={() => setCurrentView('overview')} icon={<Home />} label="Visão Geral" dark /><NavButton active={currentView === 'students'} onClick={() => setCurrentView('students')} icon={<Users />} label="Alunos" dark /><NavButton active={currentView === 'classes'} onClick={() => setCurrentView('classes')} icon={<Video />} label="Gestão de Aulas" dark /><NavButton active={currentView === 'challenges'} onClick={() => setCurrentView('challenges')} icon={<Gamepad2 />} label="Criar Desafios" dark /><NavButton active={currentView === 'corrections'} onClick={() => setCurrentView('corrections')} icon={<FileCheck />} label="Correções" dark />{currentUser.role === 'admin' && <NavButton active={currentView === 'financial'} onClick={() => setCurrentView('financial')} icon={<DollarSign />} label="Financeiro" dark />}<NavButton active={currentView === 'calendar'} onClick={() => setCurrentView('calendar')} icon={<CalendarDays />} label="Agenda" dark /></nav><div className="p-4 border-t border-white/10"><button onClick={onLogout} className="flex items-center gap-3 w-full p-3 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-all font-medium text-sm"><LogOut size={18} /> Sair</button></div></aside>
-      <main className="flex-1 max-w-5xl mx-auto w-full p-4 md:p-8"><header className="md:hidden flex justify-between items-center mb-6"><div className="w-32"><LogoSVG className="w-full h-auto" /></div><button onClick={onLogout}><LogOut size={20} /></button></header><h2 className="text-2xl font-bold text-slate-800 mb-6 capitalize">{currentView === 'overview' ? 'Visão Geral' : currentView}</h2>{renderContent()}</main>
+      <aside className="hidden md:flex flex-col w-64 bg-[#2d1b36] text-white h-screen sticky top-0"><div className="p-6 border-b border-white/10 flex flex-col items-center justify-center"><div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-3xl mb-3">{currentUser.avatar}</div><div className="text-center"><h1 className="font-bold text-lg text-[#eec00a]">{currentUser.name}</h1><p className="text-xs text-white/50 uppercase tracking-widest">{currentUser.role === 'admin' ? 'Diretoria' : 'Professor'}</p></div></div><nav className="flex-1 p-4 space-y-2"><NavButton active={currentView === 'overview'} onClick={() => setCurrentView('overview')} icon={<Home />} label="VisÃ£o Geral" dark /><NavButton active={currentView === 'students'} onClick={() => setCurrentView('students')} icon={<Users />} label="Alunos" dark /><NavButton active={currentView === 'classes'} onClick={() => setCurrentView('classes')} icon={<Video />} label="GestÃ£o de Aulas" dark /><NavButton active={currentView === 'challenges'} onClick={() => setCurrentView('challenges')} icon={<Gamepad2 />} label="Criar Desafios" dark /><NavButton active={currentView === 'corrections'} onClick={() => setCurrentView('corrections')} icon={<FileCheck />} label="CorreÃ§Ãµes" dark />{currentUser.role === 'admin' && <NavButton active={currentView === 'financial'} onClick={() => setCurrentView('financial')} icon={<DollarSign />} label="Financeiro" dark />}<NavButton active={currentView === 'calendar'} onClick={() => setCurrentView('calendar')} icon={<CalendarDays />} label="Agenda" dark /></nav><div className="p-4 border-t border-white/10"><button onClick={onLogout} className="flex items-center gap-3 w-full p-3 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-all font-medium text-sm"><LogOut size={18} /> Sair</button></div></aside>
+      <main className="flex-1 max-w-5xl mx-auto w-full p-4 md:p-8"><header className="md:hidden flex justify-between items-center mb-6"><div className="w-32"><LogoSVG className="w-full h-auto" /></div><button onClick={onLogout}><LogOut size={20} /></button></header><h2 className="text-2xl font-bold text-slate-800 mb-6 capitalize">{currentView === 'overview' ? 'VisÃ£o Geral' : currentView}</h2>{renderContent()}</main>
       <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 flex justify-around p-3 z-50 pb-safe"><MobileNavButton active={currentView === 'overview'} onClick={() => setCurrentView('overview')} icon={<Home size={20} />} label="Home" /><MobileNavButton active={currentView === 'students'} onClick={() => setCurrentView('students')} icon={<Users size={20} />} label="Alunos" /><MobileNavButton active={currentView === 'classes'} onClick={() => setCurrentView('classes')} icon={<Plus size={20} />} label="Add Aula" /><MobileNavButton active={currentView === 'calendar'} onClick={() => setCurrentView('calendar')} icon={<CalendarDays size={20} />} label="Agenda" /></nav>
     </div>
   );
 };
 
+const StudentCard = ({ student, onClick }) => (
+  <button
+    onClick={onClick}
+    className="group flex flex-col items-center transition-all duration-300"
+  >
+    <div className={`
+      w-28 h-28 md:w-36 md:h-36 rounded-[2rem] flex items-center justify-center text-5xl 
+      shadow-xl shadow-slate-200/50 dark:shadow-none relative overflow-hidden transition-all duration-500
+      group-hover:-translate-y-2 group-hover:shadow-2xl group-hover:shadow-[#a51a8f]/20
+      backdrop-blur-md border border-white/50 dark:border-white/10
+      ${student.role !== 'student'
+        ? 'bg-[#2d1b36]/90 text-white ring-2 ring-[#eec00a]/50'
+        : 'bg-white/80 dark:bg-slate-800/80 group-hover:bg-white dark:group-hover:bg-slate-700'
+      }
+    `}>
+      {student.photoUrl ? (
+        <img src={student.photoUrl} alt={student.name} className="w-full h-full object-cover z-20" />
+      ) : (
+        <span className="z-10 transform group-hover:scale-110 transition-transform duration-300">{student.avatar}</span>
+      )}
+      {student.role === 'student' && !student.photoUrl && (
+        <div className="absolute inset-0 bg-gradient-to-tr from-[#a51a8f]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      )}
+    </div>
+
+    <div className="mt-5 flex flex-col items-center gap-1">
+      <span className={`
+        text-lg font-bold transition-colors duration-300
+        ${student.role !== 'student'
+          ? 'text-[#2d1b36] dark:text-white group-hover:text-[#a51a8f] dark:group-hover:text-[#d36ac1]'
+          : 'text-slate-600 dark:text-slate-300 group-hover:text-[#a51a8f] dark:group-hover:text-white'
+        }
+      `}>
+        {student.name}
+      </span>
+
+      {student.role !== 'student' && (
+        <span className="text-[10px] uppercase font-bold text-[#a51a8f] dark:text-[#eec00a] tracking-widest bg-[#a51a8f]/5 dark:bg-[#eec00a]/10 px-2 py-1 rounded-full">
+          {student.role === 'admin' ? 'Diretoria' : 'Professor'}
+        </span>
+      )}
+    </div>
+  </button>
+);
+
 // --- LOGIN WALL (USANDO O NOVO BACKGROUND ANIMADO CLARO) ---
+
+
 const LoginWall = ({ onLogin }) => {
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -1059,47 +1208,222 @@ const LoginWall = ({ onLogin }) => {
   const [error, setError] = useState('');
   const [authReady, setAuthReady] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Navigation State
+  const [selectedClass, setSelectedClass] = useState(null);
 
   useEffect(() => { const setup = async () => { if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token); else await signInAnonymously(auth); setAuthReady(true); }; setup(); }, []);
   useEffect(() => { if (!authReady) return; const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'students')); const unsubscribe = onSnapshot(q, (snapshot) => { const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); data.sort((a, b) => a.name.localeCompare(b.name)); setStudents(data); }, (err) => console.error(err)); return () => unsubscribe(); }, [authReady]);
 
   const handleLogin = () => { if (password === selectedStudent.password) onLogin(selectedStudent); else { setError('Senha incorreta!'); setPassword(''); } };
 
-  const admins = students.filter(s => s.role === 'admin' || s.role === 'teacher');
-  const regularStudents = students.filter(s => s.role === 'student');
-  const displayedUsers = showAdminLogin ? admins : regularStudents;
+  const getDisplayData = () => {
+    let baseList = showAdminLogin ? students.filter(s => s.role !== 'student') : students.filter(s => s.role === 'student');
+
+    // 1. Search Mode (Global Override)
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      return {
+        mode: 'search',
+        data: baseList.filter(s => s.name.toLowerCase().includes(lower))
+      };
+    }
+
+    // 2. Admin Mode (Flat List)
+    if (showAdminLogin) return { mode: 'flat', data: baseList };
+
+    // 3. Class View (Specific Class)
+    if (selectedClass) {
+      const classStudents = baseList.filter(s => (s.schoolYear || 'Outros') === selectedClass);
+      return { mode: 'class', data: classStudents, title: selectedClass };
+    }
+
+    // 4. Root View (List of Classes)
+    const grouped = baseList.reduce((acc, student) => {
+      const year = student.schoolYear || 'Outros';
+      if (!acc[year]) acc[year] = 0;
+      acc[year]++;
+      return acc;
+    }, {});
+
+    // Custom sort order for school years
+    const sortOrder = ['6º Ano', '7º Ano', '8º Ano', '9º Ano', '1º Ano', '2º Ano', '3º Ano', 'Outros'];
+    const sortedKeys = Object.keys(grouped).sort((a, b) => {
+      const idxA = sortOrder.indexOf(a);
+      const idxB = sortOrder.indexOf(b);
+      // If both are in the list, compare indices
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      // If only A is in list, A comes first
+      if (idxA !== -1) return -1;
+      // If only B is in list, B comes first
+      if (idxB !== -1) return 1;
+      // default string sort
+      return a.localeCompare(b);
+    });
+
+    return {
+      mode: 'root',
+      data: sortedKeys.map(k => ({ title: k, count: grouped[k] }))
+    };
+  };
+
+  const displayInfo = getDisplayData();
 
   return (
-
     <BackgroundPaths>
       <SpeedInsights />
       <ThemeToggle />
-      {!selectedStudent && (<button onClick={() => { setShowAdminLogin(!showAdminLogin); setSelectedStudent(null); }} className="absolute top-6 right-6 text-slate-400 hover:text-[#a51a8f] text-[10px] font-bold uppercase tracking-[0.2em] transition-colors z-20">{showAdminLogin ? 'ALUNOS' : 'ADMIN'}</button>)}
-      <div className="z-10 w-full max-w-4xl text-center flex flex-col items-center">
-        <div className="w-full max-w-lg mb-8"><LogoSVG className="w-full h-auto" /></div>
-        <p className="text-slate-500 mb-12 text-lg font-medium">{showAdminLogin ? 'Área Restrita - Selecione o Usuário' : 'Selecione seu perfil para entrar'}</p>
+      {!selectedStudent && (<button onClick={() => { setShowAdminLogin(!showAdminLogin); setSelectedStudent(null); setSelectedClass(null); }} className="absolute top-6 right-6 text-slate-400 hover:text-[#a51a8f] text-[10px] font-bold uppercase tracking-[0.2em] transition-colors z-20">{showAdminLogin ? 'ALUNOS' : 'ADMIN'}</button>)}
+
+      <div className="z-10 flex flex-col items-center justify-center min-h-screen w-full px-4 pt-16 md:pt-0">
+        <div className="w-full max-w-lg mb-8 transform hover:scale-105 transition-transform duration-700">
+          <LogoSVG className="w-full h-auto drop-shadow-[0_10px_20px_rgba(255,255,255,0.8)] dark:drop-shadow-xl" />
+        </div>
+
+        <p className="text-slate-600 dark:text-slate-300 mb-8 text-lg font-medium tracking-wide animate-fadeIn">
+          {showAdminLogin ? 'Área Restrita - Selecione o Usuário' : 'Selecione seu perfil para entrar'}
+        </p>
+
         {!selectedStudent ? (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 justify-center">
-              {displayedUsers.map(student => (
-                <button key={student.id} onClick={() => setSelectedStudent(student)} className="group flex flex-col items-center transition-all duration-300 transform hover:scale-105">
-                  <div className={`w-24 h-24 md:w-32 md:h-32 rounded-3xl border-2 flex items-center justify-center text-5xl shadow-xl shadow-slate-200 group-hover:shadow-2xl relative overflow-hidden transition-all ${student.role !== 'student' ? 'bg-[#2d1b36] border-[#eec00a] text-white' : 'bg-white border-slate-100 group-hover:border-[#eec00a]'}`}>
-                    {student.photoUrl ? <img src={student.photoUrl} alt={student.name} className="w-full h-full object-cover z-20" /> : <span className="z-10">{student.avatar}</span>}
-                    {student.role === 'student' && !student.photoUrl && <div className="absolute inset-0 bg-gradient-to-t from-[#a51a8f]/5 to-transparent"></div>}
-                  </div>
-                  <span className={`mt-4 text-lg font-bold group-hover:text-[#a51a8f] ${student.role !== 'student' ? 'text-[#2d1b36]' : 'text-slate-600'}`}>{student.name}</span>
-                  {student.role !== 'student' && <span className="text-[10px] uppercase font-bold text-[#a51a8f] tracking-widest mt-1">{student.role === 'admin' ? 'Diretoria' : 'Professor'}</span>}
-                </button>
-              ))}
-              <button onClick={() => seedDatabase(auth.currentUser?.uid)} className="flex flex-col items-center group opacity-70 hover:opacity-100"><div className="w-24 h-24 md:w-32 md:h-32 rounded-3xl border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 group-hover:border-slate-400 group-hover:text-slate-500 bg-slate-50"><span className="text-sm px-2 text-center font-medium">Resetar / Atualizar Demo</span></div></button>
+          <div className="w-full max-w-5xl animate-slideUp flex flex-col items-center">
+            {/* Search Bar - Always Visible */}
+            <div className="w-full max-w-sm relative mb-10">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
+              <input
+                type="text"
+                placeholder="Buscar seu nome..."
+                className="w-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-full pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#a51a8f] shadow-lg transition-all dark:text-white"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-          </>
+
+            {/* Dynamic Content Area */}
+            <div className="w-full">
+              {/* MODE: SEARCH or FLAT (Admin) */}
+              {(displayInfo.mode === 'search' || displayInfo.mode === 'flat') && (
+                <div className="space-y-4 animate-fadeIn">
+                  {displayInfo.mode === 'search' && <h3 className="text-center text-slate-500 mb-4">Resultados da busca</h3>}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6 justify-center justify-items-center">
+                    {displayInfo.data.map(student => (
+                      <StudentCard key={student.id} student={student} onClick={() => setSelectedStudent(student)} />
+                    ))}
+                  </div>
+                  {displayInfo.data.length === 0 && <p className="text-center text-slate-400">Nenhum aluno encontrado.</p>}
+                </div>
+              )}
+
+              {/* MODE: ROOT (Class List) */}
+              {displayInfo.mode === 'root' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-4xl mx-auto animate-slideUp">
+                  {displayInfo.data.map(group => (
+                    <button
+                      key={group.title}
+                      onClick={() => setSelectedClass(group.title)}
+                      className="group bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-slate-200 dark:border-slate-700 p-6 rounded-3xl hover:bg-white dark:hover:bg-slate-700 transition-all hover:scale-105 hover:shadow-xl flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-[#a51a8f]/10 dark:bg-[#a51a8f]/20 rounded-2xl flex items-center justify-center text-[#a51a8f] dark:text-[#d36ac1]">
+                          <Users size={24} />
+                        </div>
+                        <div className="text-left">
+                          <h3 className="text-xl font-bold text-slate-700 dark:text-slate-200">{group.title}</h3>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">{group.count} Alunos</p>
+                        </div>
+                      </div>
+                      <ChevronRight size={24} className="text-slate-400 group-hover:text-[#a51a8f] group-hover:translate-x-1 transition-all" />
+                    </button>
+                  ))}
+                  {displayInfo.data.length === 0 && <p className="text-center text-slate-400 col-span-full">Nenhuma turma encontrada.</p>}
+                </div>
+              )}
+
+              {/* MODE: CLASS (Specific Class Students) */}
+              {displayInfo.mode === 'class' && (
+                <div className="animate-slideUp">
+                  <div className="flex items-center gap-4 mb-8">
+                    <button
+                      onClick={() => setSelectedClass(null)}
+                      className="flex items-center gap-2 text-slate-500 hover:text-[#a51a8f] transition-colors font-bold"
+                    >
+                      <ChevronLeft size={20} /> Voltar
+                    </button>
+                    <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-200 flex items-center gap-3">
+                      <span className="bg-[#a51a8f]/10 px-3 py-1 rounded-xl text-[#a51a8f]">{displayInfo.title}</span>
+                    </h2>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6 justify-center justify-items-center">
+                    {displayInfo.data.map(student => (
+                      <StudentCard key={student.id} student={student} onClick={() => setSelectedStudent(student)} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {!showAdminLogin && !searchTerm && !selectedClass && (
+              <div className="mt-16 text-center">
+                <button
+                  onClick={() => seedDatabase(auth.currentUser?.uid)}
+                  className="text-xs text-slate-400 hover:text-[#a51a8f] transition-colors"
+                >
+                  Resetar Demo
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
-          <div className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-2xl shadow-slate-200/50 max-w-sm mx-auto animate-fadeIn border border-white">
-            <div className="mb-6 flex flex-col items-center"><div className={`w-20 h-20 rounded-full flex items-center justify-center text-4xl mb-3 ring-4 shadow-lg overflow-hidden ${selectedStudent.role !== 'student' ? 'bg-[#2d1b36] ring-[#eec00a]' : 'bg-[#fdf2fa] ring-white'}`}>{selectedStudent.photoUrl ? <img src={selectedStudent.photoUrl} alt={selectedStudent.name} className="w-full h-full object-cover" /> : selectedStudent.avatar}</div><h2 className="text-2xl font-bold text-slate-800">Olá, {selectedStudent.name}!</h2></div>
-            <input type="password" value={password} onChange={(e) => { setPassword(e.target.value); setError(''); }} placeholder={selectedStudent.role !== 'student' ? "Senha de Acesso" : "Sua senha (1234)"} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 text-center text-lg tracking-widest focus:outline-none focus:border-[#a51a8f] focus:ring-2 focus:ring-[#a51a8f]/10 mb-4 transition-all" onKeyDown={(e) => e.key === 'Enter' && handleLogin()} />
-            {error && <p className="text-red-500 text-sm mb-4 font-medium">{error}</p>}
-            <div className="flex gap-2"><button onClick={() => { setSelectedStudent(null); setPassword(''); setError(''); }} className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold transition-colors">Voltar</button><button onClick={handleLogin} className="flex-1 py-3 rounded-xl bg-[#a51a8f] text-white hover:bg-[#8e167b] font-bold shadow-lg shadow-[#a51a8f]/30">Entrar</button></div>
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl shadow-slate-200/50 dark:shadow-black/50 w-full max-w-sm mx-auto animate-fadeIn border border-white/50 dark:border-slate-700/50">
+            <div className="mb-8 flex flex-col items-center">
+              <div className={`
+                w-24 h-24 rounded-full flex items-center justify-center text-4xl mb-4 
+                ring-4 shadow-xl overflow-hidden transform hover:scale-105 transition-transform duration-300
+                ${selectedStudent.role !== 'student'
+                  ? 'bg-[#2d1b36] ring-[#eec00a]'
+                  : 'bg-[#fdf2fa] ring-white dark:ring-slate-700'
+                }
+              `}>
+                {selectedStudent.photoUrl ? (
+                  <img src={selectedStudent.photoUrl} alt={selectedStudent.name} className="w-full h-full object-cover" />
+                ) : (
+                  selectedStudent.avatar
+                )}
+              </div>
+              <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Olá, {selectedStudent.name}!</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">Digite sua senha para continuar</p>
+            </div>
+
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setError(''); }}
+              placeholder={selectedStudent.role !== 'student' ? "Senha de Acesso" : "Sua senha (1234)"}
+              className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl px-4 py-4 text-slate-800 dark:text-white text-center text-lg tracking-[0.5em] font-bold focus:outline-none focus:border-[#a51a8f] focus:ring-4 focus:ring-[#a51a8f]/10 mb-6 transition-all placeholder:tracking-normal placeholder:font-normal"
+              onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+            />
+
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-300 text-sm mb-6 font-bold py-3 px-4 rounded-xl text-center animate-shake border border-red-100 dark:border-red-900/30">
+                {error}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setSelectedStudent(null); setPassword(''); setError(''); }}
+                className="flex-1 py-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold transition-colors"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={handleLogin}
+                className="flex-1 py-4 rounded-2xl bg-[#a51a8f] text-white hover:bg-[#8e167b] font-bold shadow-lg shadow-[#a51a8f]/30 hover:shadow-[#a51a8f]/50 hover:-translate-y-1 transition-all"
+              >
+                Entrar
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -1108,7 +1432,7 @@ const LoginWall = ({ onLogin }) => {
 };
 
 // --- APP COMPONENT ---
-export default function App() {
+function AppContent() {
   const [currentUser, setCurrentUser] = useState(null);
   const [currentView, setCurrentView] = useState('home');
   const [students, setStudents] = useState([]);
@@ -1116,16 +1440,18 @@ export default function App() {
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [showRank, setShowRank] = useState(false);
+
   // Injetar estilos globais
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
-      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-      @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-      .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
-      .animate-slideUp { animation: slideUp 0.3s ease-out forwards; }
-      .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-    `;
+        @keyframes fadeIn {from {opacity: 0; transform: translateY(10px); } to {opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp {from {opacity: 0; transform: translateY(20px); } to {opacity: 1; transform: translateY(0); } }
+        .animate-fadeIn {animation: fadeIn 0.4s ease-out forwards; }
+        .animate-slideUp {animation: slideUp 0.3s ease-out forwards; }
+        .pb-safe {padding - bottom: env(safe-area-inset-bottom); }
+        `;
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
   }, []);
@@ -1149,7 +1475,7 @@ export default function App() {
   const handleCompleteQuiz = async (quizId, xpReward, coinReward) => { if (!currentUser) return; await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'quizzes', quizId), { completedBy: arrayUnion(currentUser.id) }); await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'students', currentUser.id), { xp: increment(xpReward), coins: increment(coinReward), level: Math.floor((currentUser.xp + xpReward) / 500) + 1 }); };
   const handleLogout = () => { setCurrentUser(null); setCurrentView('home'); };
 
-  if (loading) return <div className="h-screen flex items-center justify-center bg-slate-900 text-white">Carregando Conecta Português...</div>;
+  if (loading) return <div className="h-screen flex items-center justify-center bg-slate-900 text-white">Carregando Conecta PortuguÃªs...</div>;
   if (!currentUser) return <LoginWall onLogin={setCurrentUser} />;
 
   if (currentUser.role === 'admin' || currentUser.role === 'teacher') {
@@ -1160,9 +1486,32 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 flex flex-col md:flex-row">
       <SpeedInsights />
       <ThemeToggle />
-      <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 h-screen sticky top-0"><div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-center"><LogoSVG className="w-40 h-auto" /></div><nav className="flex-1 p-4 space-y-2"><NavButton active={currentView === 'home'} onClick={() => setCurrentView('home')} icon={<Home />} label="Início" /><NavButton active={currentView === 'journey'} onClick={() => setCurrentView('journey')} icon={<BookOpen />} label="Jornada" /><NavButton active={currentView === 'calendar'} onClick={() => setCurrentView('calendar')} icon={<CalendarDays />} label="Calendário" /><NavButton active={currentView === 'challenges'} onClick={() => setCurrentView('challenges')} icon={<Gamepad2 />} label="Desafios" /><NavButton active={currentView === 'rank'} onClick={() => setCurrentView('rank')} icon={<Trophy />} label="Ranking" /></nav><div className="p-4 border-t border-slate-100 dark:border-slate-700"><button onClick={handleLogout} className="flex items-center gap-3 w-full p-3 text-slate-500 hover:text-red-500 hover:bg-red-50 dark:text-slate-400 dark:hover:bg-slate-700/50 rounded-xl transition-all font-medium text-sm"><LogOut size={18} /> Sair</button></div></aside>
-      <main className="flex-1 max-w-5xl mx-auto w-full p-4 md:p-8"><header className="md:hidden flex justify-between items-center mb-6"><div className="w-32"><LogoSVG className="w-full h-auto" /></div><button onClick={handleLogout} className="p-2 bg-slate-200 dark:bg-slate-700 rounded-full"><LogOut size={16} className="dark:text-white" /></button></header><div className="animate-fadeIn">{currentView === 'home' && <ViewHome student={currentUser} classes={classes} />}{currentView === 'journey' && <ViewJourney classes={classes} />}{currentView === 'calendar' && <ViewCalendar classes={classes} />}{currentView === 'challenges' && <ViewChallenges student={currentUser} quizzes={quizzes} onCompleteQuiz={handleCompleteQuiz} />}{currentView === 'rank' && <ViewRank students={students} currentStudentId={currentUser.id} />}</div></main>
-      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex justify-around p-3 z-50 pb-safe"><MobileNavButton active={currentView === 'home'} onClick={() => setCurrentView('home')} icon={<Home size={20} />} label="Início" /><MobileNavButton active={currentView === 'journey'} onClick={() => setCurrentView('journey')} icon={<BookOpen size={20} />} label="Aulas" /><MobileNavButton active={currentView === 'calendar'} onClick={() => setCurrentView('calendar')} icon={<CalendarDays size={20} />} label="Agenda" /><MobileNavButton active={currentView === 'challenges'} onClick={() => setCurrentView('challenges')} icon={<Gamepad2 size={20} />} label="Jogar" /><MobileNavButton active={currentView === 'rank'} onClick={() => setCurrentView('rank')} icon={<Trophy size={20} />} label="Rank" /></nav>
+      <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 h-screen sticky top-0"><div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-center"><LogoSVG className="w-40 h-auto" /></div><nav className="flex-1 p-4 space-y-2"><NavButton active={currentView === 'home'} onClick={() => setCurrentView('home')} icon={<Home />} label="InÃ­cio" /><NavButton active={currentView === 'journey'} onClick={() => setCurrentView('journey')} icon={<BookOpen />} label="Jornada" /><NavButton active={currentView === 'calendar'} onClick={() => setCurrentView('calendar')} icon={<CalendarDays />} label="CalendÃ¡rio" /><NavButton active={currentView === 'challenges'} onClick={() => setCurrentView('challenges')} icon={<Gamepad2 />} label="Desafios" /></nav><div className="p-4 border-t border-slate-100 dark:border-slate-700"><button onClick={handleLogout} className="flex items-center gap-3 w-full p-3 text-slate-500 hover:text-red-500 hover:bg-red-50 dark:text-slate-400 dark:hover:bg-slate-700/50 rounded-xl transition-all font-medium text-sm"><LogOut size={18} /> Sair</button></div></aside>
+      <main className="flex-1 max-w-5xl mx-auto w-full p-4 md:p-8"><header className="md:hidden flex justify-between items-center mb-6"><div className="w-32"><LogoSVG className="w-full h-auto" /></div><button onClick={handleLogout} className="p-2 bg-slate-200 dark:bg-slate-700 rounded-full"><LogOut size={16} className="dark:text-white" /></button></header><div className="animate-fadeIn">{currentView === 'home' && <ViewHome student={currentUser} classes={classes} onOpenRank={() => setShowRank(true)} />}{currentView === 'journey' && <ViewJourney classes={classes} />}{currentView === 'calendar' && <ViewCalendar classes={classes} />}{currentView === 'challenges' && <ViewChallenges student={currentUser} quizzes={quizzes} onCompleteQuiz={handleCompleteQuiz} />}</div></main>
+      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex justify-around p-3 z-50 pb-safe"><MobileNavButton active={currentView === 'home'} onClick={() => setCurrentView('home')} icon={<Home size={20} />} label="InÃ­cio" /><MobileNavButton active={currentView === 'journey'} onClick={() => setCurrentView('journey')} icon={<BookOpen size={20} />} label="Aulas" /><MobileNavButton active={currentView === 'calendar'} onClick={() => setCurrentView('calendar')} icon={<CalendarDays size={20} />} label="Agenda" /><MobileNavButton active={currentView === 'challenges'} onClick={() => setCurrentView('challenges')} icon={<Gamepad2 size={20} />} label="Jogar" /></nav>
+
+      {/* RANKING MODAL / POPUP */}
+      {showRank && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn" onClick={() => setShowRank(false)}>
+          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl w-full max-w-lg overflow-hidden animate-slideUp max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#a51a8f] p-4 text-white flex justify-between items-center shrink-0">
+              <h3 className="font-bold text-lg flex items-center gap-2"><Trophy className="w-5 h-5 text-[#eec00a]" /> Ranking da Turma</h3>
+              <button onClick={() => setShowRank(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="overflow-y-auto p-4 shrink-1">
+              <ViewRank students={students} currentStudentId={currentUser.id} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+export default function App() {
+  return (
+    <TamaguiProvider config={config}>
+      <AppContent />
+    </TamaguiProvider>
+  )
 }

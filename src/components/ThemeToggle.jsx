@@ -1,11 +1,49 @@
 import React, { useEffect, useState } from 'react';
 import { Sun, Moon } from 'lucide-react';
+import { XStack, Stack, styled } from 'tamagui';
+
+const SwitchContainer = styled(XStack, {
+    borderRadius: 100,
+    backgroundColor: '$background',
+    borderColor: '$borderColor',
+    borderWidth: 1,
+    padding: 2,
+    position: 'fixed',
+    zIndex: 100,
+    elevation: '$4',
+    cursor: 'pointer',
+    animation: 'bouncy',
+    hoverStyle: {
+        scale: 1.05,
+    }
+})
+
+const IconWrapper = styled(Stack, {
+    borderRadius: 100,
+    padding: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    animation: 'quick',
+    pressStyle: {
+        opacity: 0.7
+    },
+    variants: {
+        active: {
+            true: {
+                backgroundColor: '$color', // Theme text color (inverted bg)
+            },
+            false: {
+                backgroundColor: 'transparent',
+            }
+        }
+    }
+})
 
 export const ThemeToggle = () => {
     const [isDark, setIsDark] = useState(false);
 
     useEffect(() => {
-        // Check initial preference
         const savedTheme = localStorage.getItem('theme');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -18,25 +56,46 @@ export const ThemeToggle = () => {
         }
     }, []);
 
-    const toggleTheme = () => {
-        if (isDark) {
-            document.documentElement.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
-            setIsDark(false);
-        } else {
+    const setMode = (mode) => {
+        if (mode === 'dark') {
             document.documentElement.classList.add('dark');
             localStorage.setItem('theme', 'dark');
             setIsDark(true);
+        } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+            setIsDark(false);
         }
     };
 
     return (
-        <button
-            onClick={toggleTheme}
-            className="fixed bottom-6 right-6 z-50 p-3 rounded-full bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-xl hover:scale-110 transition-all border border-slate-200 dark:border-slate-700"
-            aria-label="Alternar tema"
-        >
-            {isDark ? <Sun size={24} className="text-amber-400" /> : <Moon size={24} className="text-slate-600" />}
-        </button>
+        <SwitchContainer className="fixed bottom-24 right-5 md:bottom-6 md:right-6">
+            {/* Light Mode Side */}
+            <IconWrapper
+                active={!isDark}
+                onPress={() => setMode('light')}
+            >
+                <Sun
+                    size={16}
+                    // If active (Light mode), icon should be inverse color (white/dark bg). 
+                    // If inactive (Dark mode), icon should be subdued.
+                    // Using direct colors for clarity in this specific UI pattern
+                    color={!isDark ? (isDark ? '#000' : '#fff') : '#94a3b8'}
+                    style={{ strokeWidth: 2.5 }}
+                />
+            </IconWrapper>
+
+            {/* Dark Mode Side */}
+            <IconWrapper
+                active={isDark}
+                onPress={() => setMode('dark')}
+            >
+                <Moon
+                    size={16}
+                    color={isDark ? (isDark ? '#000' : '#fff') : '#94a3b8'}
+                    style={{ strokeWidth: 2.5 }}
+                />
+            </IconWrapper>
+        </SwitchContainer>
     );
 };
