@@ -1,44 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Sun, Moon } from 'lucide-react';
-import { XStack, Stack, styled } from 'tamagui';
-
-const SwitchContainer = styled(XStack, {
-    borderRadius: 100,
-    backgroundColor: '$background',
-    borderColor: '$borderColor',
-    borderWidth: 1,
-    padding: 2,
-    position: 'fixed',
-    zIndex: 100,
-    elevation: '$4',
-    cursor: 'pointer',
-    animation: 'bouncy',
-    hoverStyle: {
-        scale: 1.05,
-    }
-})
-
-const IconWrapper = styled(Stack, {
-    borderRadius: 100,
-    padding: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    animation: 'quick',
-    pressStyle: {
-        opacity: 0.7
-    },
-    variants: {
-        active: {
-            true: {
-                backgroundColor: '$color', // Theme text color (inverted bg)
-            },
-            false: {
-                backgroundColor: 'transparent',
-            }
-        }
-    }
-})
 
 export const ThemeToggle = () => {
     const [isDark, setIsDark] = useState(false);
@@ -69,33 +30,19 @@ export const ThemeToggle = () => {
     };
 
     return (
-        <SwitchContainer className="fixed bottom-24 right-5 md:bottom-6 md:right-6">
-            {/* Light Mode Side */}
-            <IconWrapper
-                active={!isDark}
-                onPress={() => setMode('light')}
+        <div className="fixed bottom-24 right-5 md:bottom-6 md:right-6 z-50 flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full p-1 shadow-xl hover:scale-105 transition-transform duration-300">
+            <button
+                onClick={() => setMode('light')}
+                className={`p-2 rounded-full transition-all duration-300 ${!isDark ? 'bg-amber-100 text-amber-500 shadow-sm' : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
             >
-                <Sun
-                    size={16}
-                    // If active (Light mode), icon should be inverse color (white/dark bg). 
-                    // If inactive (Dark mode), icon should be subdued.
-                    // Using direct colors for clarity in this specific UI pattern
-                    color={!isDark ? (isDark ? '#000' : '#fff') : '#94a3b8'}
-                    style={{ strokeWidth: 2.5 }}
-                />
-            </IconWrapper>
-
-            {/* Dark Mode Side */}
-            <IconWrapper
-                active={isDark}
-                onPress={() => setMode('dark')}
+                <Sun size={18} />
+            </button>
+            <button
+                onClick={() => setMode('dark')}
+                className={`p-2 rounded-full transition-all duration-300 ${isDark ? 'bg-indigo-100 text-indigo-500 shadow-sm dark:bg-indigo-900/30 dark:text-indigo-300' : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
             >
-                <Moon
-                    size={16}
-                    color={isDark ? (isDark ? '#000' : '#fff') : '#94a3b8'}
-                    style={{ strokeWidth: 2.5 }}
-                />
-            </IconWrapper>
-        </SwitchContainer>
+                <Moon size={18} />
+            </button>
+        </div>
     );
 };
