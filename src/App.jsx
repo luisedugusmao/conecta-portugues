@@ -9,7 +9,7 @@ import { LoginWall } from './components/LoginWall';
 import { NavButton, MobileNavButton } from './components/UIHelpers';
 import { auth, db, appId } from './firebase';
 import {
-  Home, BookOpen, CalendarDays, Gamepad2, LogOut, X, Plus
+  Home, BookOpen, CalendarDays, Gamepad2, LogOut, X, Plus, Trophy
 } from 'lucide-react';
 
 // Lazy loaded views for performance
@@ -185,7 +185,7 @@ const App = () => {
           </button>
         </div>
         <MobileNavButton active={currentView === 'calendar'} onClick={() => setCurrentView('calendar')} icon={<CalendarDays size={24} />} label="Agenda" />
-        <MobileNavButton active={false} onClick={() => { setShowRank(true); }} icon={<Plus size={24} className="rotate-45" />} label="Rank" />
+        <MobileNavButton active={false} onClick={() => { setShowRank(true); }} icon={<Trophy size={24} />} label="Rank" />
       </nav>
 
       {/* Rank Modal */}
