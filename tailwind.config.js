@@ -20,6 +20,11 @@ export default {
                     },
                 },
             },
+            fontFamily: {
+                sans: ['Fredoka', 'sans-serif'],
+                display: ['Fredoka', 'cursive'],
+                body: ['Outfit', 'sans-serif'],
+            },
         },
     },
     plugins: [],
