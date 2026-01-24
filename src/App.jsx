@@ -138,7 +138,7 @@ const App = () => {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 h-screen sticky top-0 z-30 shadow-sm transition-colors duration-300">
         <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-center">
-          <div className="w-24"><LogoSVG className="w-full h-auto" /></div>
+          <div className="w-40"><LogoSVG className="w-full h-auto" /></div>
         </div>
         <nav className="flex-1 p-4 space-y-2">
           <NavButton active={currentView === 'home'} onClick={() => setCurrentView('home')} icon={<Home />} label="Início" />
@@ -159,7 +159,7 @@ const App = () => {
           <div className="p-4 md:p-8 max-w-6xl mx-auto min-h-screen">
             {/* Mobile Header */}
             <header className="md:hidden flex justify-between items-center mb-6 sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-4 -mx-4 z-20 border-b border-slate-100 dark:border-slate-700">
-              <div className="w-[4.5rem]"><LogoSVG className="w-full h-auto" /></div>
+              <div className="w-20"><LogoSVG className="w-full h-auto" /></div>
               <button onClick={handleLogout} className="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400">
                 <LogOut size={18} />
               </button>

@@ -13,14 +13,13 @@ export const NavButton = ({ active, onClick, icon, label, dark = false }) => (
     </button>
 );
 
-export const MobileNavButton = ({ active, onClick, icon, label }) => (
+export const MobileNavButton = ({ active, onClick, icon, label, compact = false }) => (
     <button
         onClick={onClick}
-        className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${active ? 'text-[#a51a8f] bg-[#fdf2fa]' : 'text-slate-400'
-            }`}
+        className={`flex flex-col items-center justify-center w-full rounded-xl transition-all ${active ? 'text-[#a51a8f] bg-[#fdf2fa]' : 'text-slate-400'} ${compact ? 'py-1 gap-0.5' : 'p-2 gap-1'}`}
     >
         {icon}
-        <span className="text-[10px] font-bold">{label}</span>
+        <span className={`font-bold text-center leading-none ${compact ? 'text-[9px]' : 'text-[10px]'}`}>{label}</span>
     </button>
 );
 

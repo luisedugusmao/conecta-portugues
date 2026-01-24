@@ -83,6 +83,11 @@ export const ViewChallenges = ({ student, quizzes, onCompleteQuiz }) => {
             }
         });
 
+        // Proportional Scoring Calculation
+        const totalQ = activeQuiz.questions.length;
+        const autoXP = Math.round((correctCount / totalQ) * activeQuiz.xpReward);
+        const autoCoins = Math.round((correctCount / totalQ) * activeQuiz.coinReward);
+
         try {
             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'submissions'), {
                 quizId: activeQuiz.id,
@@ -94,10 +99,14 @@ export const ViewChallenges = ({ student, quizzes, onCompleteQuiz }) => {
                 totalQuestions: activeQuiz.questions.length,
                 status: 'pending',
                 submittedAt: serverTimestamp(),
-                questions: activeQuiz.questions
+                questions: activeQuiz.questions,
+                xpAwarded: autoXP, // Partial XP awarded immediately
+                autoXP: autoXP,
+                autoCoins: autoCoins,
+                maxXP: activeQuiz.xpReward
             });
             setScore(correctCount);
-            if (correctCount > 0) onCompleteQuiz(activeQuiz.id, activeQuiz.xpReward, activeQuiz.coinReward);
+            if (autoXP > 0) onCompleteQuiz(activeQuiz.id, autoXP, autoCoins);
         } catch (error) {
             console.error("Error submitting quiz:", error);
             alert("Erro ao enviar desafio. Tente novamente.");
@@ -159,7 +168,19 @@ export const ViewChallenges = ({ student, quizzes, onCompleteQuiz }) => {
                     {score === null ? (
                         <div className="space-y-8">{activeQuiz.questions.map((q, idx) => (<div key={idx} className="bg-slate-50 p-4 rounded-xl"><p className="font-bold text-slate-800 mb-4 text-lg">{idx + 1}. {q.q}</p>{(q.type === 'multiple_choice' || q.type === 'true_false') && (<div className="grid grid-cols-1 gap-3">{q.options.map((opt) => (<button key={opt} onClick={() => handleAnswer(idx, opt)} className={`text-left px-4 py-3 rounded-lg border-2 transition-all ${answers[idx] === opt ? 'border-[#a51a8f] bg-[#fdf2fa] text-[#a51a8f] font-bold' : 'border-slate-200 hover:border-[#a51a8f]/50 text-slate-600'}`}>{opt}</button>))}</div>)}{q.type === 'short_answer' && (<input type="text" placeholder="Sua resposta..." className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-[#a51a8f] focus:outline-none" value={answers[idx] || ''} onChange={(e) => handleAnswer(idx, e.target.value)} />)}{q.type === 'long_answer' && (<textarea rows={4} placeholder="Digite sua resposta aqui..." className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-[#a51a8f] focus:outline-none" value={answers[idx] || ''} onChange={(e) => handleAnswer(idx, e.target.value)}></textarea>)}</div>))}<button onClick={submitQuiz} disabled={Object.keys(answers).length !== activeQuiz.questions.length} className="w-full bg-green-500 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg">Enviar Respostas</button></div>
                     ) : (
-                        <div className="text-center py-10 animate-fadeIn"><div className="w-24 h-24 bg-[#eec00a] rounded-full mx-auto flex items-center justify-center text-5xl mb-6 shadow-lg animate-bounce text-white"><Star size={48} fill="white" /></div><h3 className="text-3xl font-bold text-slate-800 mb-2">Desafio Enviado!</h3><p className="text-slate-600 mb-6">Suas respostas foram enviadas para correção.</p><div className="flex justify-center gap-4 mb-8"><div className="bg-[#fdf2fa] px-4 py-2 rounded-lg"><span className="block text-xs text-[#a51a8f] font-bold uppercase">Ganhou</span><span className="text-xl font-bold text-[#7d126b]">+{activeQuiz.xpReward} XP</span></div><div className="bg-[#fff9db] px-4 py-2 rounded-lg"><span className="block text-xs text-[#b89508] font-bold uppercase">Ganhou</span><span className="flex items-center gap-1 text-xl font-bold text-[#b89508]">+{activeQuiz.coinReward} <Star className="w-4 h-4 fill-[#b89508]" /></span></div></div><button onClick={() => setActiveQuiz(null)} className="bg-[#a51a8f] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#8e167b]">Voltar aos Desafios</button></div>
+                        <div className="text-center py-10 animate-fadeIn"><div className="w-24 h-24 bg-[#eec00a] rounded-full mx-auto flex items-center justify-center text-5xl mb-6 shadow-lg animate-bounce text-white"><Star size={48} fill="white" /></div><h3 className="text-3xl font-bold text-slate-800 mb-2">Desafio Enviado!</h3><p className="text-slate-600 mb-6">Suas respostas foram enviadas para correção.</p>
+                            {score > 0 ? (
+                                <div className="flex flex-col items-center gap-2 mb-8">
+                                    <div className="flex justify-center gap-4">
+                                        <div className="bg-[#fdf2fa] px-4 py-2 rounded-lg"><span className="block text-xs text-[#a51a8f] font-bold uppercase">Ganhou (Automático)</span><span className="text-xl font-bold text-[#7d126b]">+{Math.round((score / activeQuiz.questions.length) * activeQuiz.xpReward)} XP</span></div>
+                                        <div className="bg-[#fff9db] px-4 py-2 rounded-lg"><span className="block text-xs text-[#b89508] font-bold uppercase">Ganhou (Automático)</span><span className="flex items-center gap-1 text-xl font-bold text-[#b89508]">+{Math.round((score / activeQuiz.questions.length) * activeQuiz.coinReward)} <Star className="w-4 h-4 fill-[#b89508]" /></span></div>
+                                    </div>
+                                    <p className="text-xs text-slate-400 mt-2">O professor poderá atribuir mais pontos na correção manual.</p>
+                                </div>
+                            ) : (
+                                <p className="text-amber-500 font-bold mb-8">Nenhum acerto automático. Aguarde a correção do professor.</p>
+                            )}
+                            <button onClick={() => setActiveQuiz(null)} className="bg-[#a51a8f] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#8e167b]">Voltar aos Desafios</button></div>
                     )}
                 </div>
             </div>

@@ -61,11 +61,14 @@ export const ViewCorrections = ({ students, quizzes }) => {
 
         try {
             const finalScore = Object.values(manualGrades).filter(v => v === true).length;
+            const previousXP = selectedSubmission.xpAwarded || 0;
+            const finalTotalXP = previousXP + bonusXP;
 
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'submissions', selectedSubmission.id), {
                 status: 'graded',
                 teacherFeedback: feedback,
-                teacherBonusXP: bonusXP,
+                teacherBonusXP: bonusXP, // This is the manual addition
+                xpAwarded: finalTotalXP, // Total final XP
                 score: finalScore,
                 questionsStatus: manualGrades,
                 teacherCorrections: teacherCorrections,
@@ -179,17 +182,20 @@ export const ViewCorrections = ({ students, quizzes }) => {
                         </div>
 
                         <div className="mb-4">
-                            <label className="block text-sm font-bold text-slate-700 mb-2">XP Extra (Bônus):</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">Nota Manual (Máx Restante: {selectedSubmission.maxXP ? (selectedSubmission.maxXP - (selectedSubmission.xpAwarded || 0)) : 100} XP):</label>
                             <div className="flex items-center gap-3">
                                 <input
                                     type="number"
                                     className="w-24 border border-slate-200 rounded-xl p-2 font-bold text-[#a51a8f] focus:outline-none focus:border-[#a51a8f]"
                                     value={bonusXP}
-                                    onChange={(e) => setBonusXP(Number(e.target.value))}
+                                    onChange={(e) => setBonusXP(Math.min(Number(e.target.value), selectedSubmission.maxXP ? (selectedSubmission.maxXP - (selectedSubmission.xpAwarded || 0)) : 1000))}
                                     min="0"
-                                    max="1000"
+                                    max={selectedSubmission.maxXP ? (selectedSubmission.maxXP - (selectedSubmission.xpAwarded || 0)) : 1000}
                                 />
-                                <span className="text-xs text-slate-500">Adicionar XP por boas respostas dissertativas.</span>
+                                <div className="text-xs text-slate-500">
+                                    <p>XP Automático já recebido: <strong className="text-green-600">{selectedSubmission.xpAwarded || 0} XP</strong></p>
+                                    <p>XP Máximo do Desafio: <strong>{selectedSubmission.maxXP || 'N/A'} XP</strong></p>
+                                </div>
                             </div>
                         </div>
 
