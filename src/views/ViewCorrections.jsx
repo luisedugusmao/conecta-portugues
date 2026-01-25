@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot, doc, updateDoc, serverTimestamp, increment } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, updateDoc, serverTimestamp, increment, addDoc } from 'firebase/firestore';
 import { db, appId } from '../firebase';
 import { FileCheck, MessageSquare, Check, X } from 'lucide-react';
 
@@ -81,6 +81,17 @@ export const ViewCorrections = ({ students, quizzes }) => {
                     coins: increment(Math.floor(bonusXP / 10))
                 });
             }
+
+            // Send Notification
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'notifications'), {
+                recipientId: selectedSubmission.studentId,
+                type: 'correction',
+                title: 'Desafio Corrigido!',
+                message: `Sua atividade "${selectedSubmission.quizTitle}" foi corrigida. Você ganhou +${bonusXP} XP bônus!`,
+                read: false,
+                createdAt: serverTimestamp(),
+                relatedId: selectedSubmission.id
+            });
 
             alert("Correção enviada com sucesso!");
             setSelectedSubmission(null);

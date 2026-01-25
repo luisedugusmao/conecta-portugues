@@ -1,9 +1,12 @@
 import React from 'react';
-import { Trophy, Star, Radio, Clock, Video, Lock, PlayCircle, FileText, BookOpen } from 'lucide-react';
+import { Trophy, Star, Radio, Clock, Video, Lock, PlayCircle, FileText, BookOpen, ShoppingBag } from 'lucide-react';
+import { getFrameClass } from '../utils/items';
+import { calculateLevel } from '../utils/levelLogic';
 
-export const ViewHome = ({ student, classes, onOpenRank }) => {
+export const ViewHome = ({ student, classes, onOpenRank, onOpenStore, onOpenProfile }) => {
     const myClasses = classes.filter(c => !c.assignedTo || c.assignedTo.length === 0 || c.assignedTo.includes(student.id));
     const activeClass = myClasses.find(c => c.status === 'live') || myClasses.find(c => c.status === 'soon') || myClasses.find(c => c.status === 'locked');
+    const { level, progress } = calculateLevel(student.xp || 0);
 
     return (
         <div className="space-y-6 pb-20 md:pb-0">
@@ -18,10 +21,13 @@ export const ViewHome = ({ student, classes, onOpenRank }) => {
                         <span className="font-bold text-sm">Ranking</span>
                     </button>
                     <div className="flex items-center gap-2 bg-[#fff9db] dark:bg-yellow-900/30 px-4 py-2 rounded-full border border-[#eec00a] shadow-sm h-12 select-none"><Star className="w-5 h-5 text-[#eec00a] fill-[#eec00a]" /><span className="font-bold text-[#b89508] dark:text-[#eec00a]">{student.coins}</span></div>
-                    <div className="flex items-center gap-3 bg-white dark:bg-slate-800 p-1 pr-4 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow cursor-default h-12">
-                        <div className="w-10 h-10 rounded-full bg-[#fdf2fa] dark:bg-slate-700 flex items-center justify-center text-xl border border-[#a51a8f]/20 overflow-hidden">{student.photoUrl ? <img src={student.photoUrl} alt={student.name} className="w-full h-full object-cover" /> : student.avatar}</div>
-                        <div className="flex flex-col justify-center"><span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide leading-tight">Nível {student.level}</span><div className="w-20 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full mt-1 overflow-hidden"><div className="bg-[#a51a8f] h-full rounded-full transition-all duration-500" style={{ width: `${Math.min((student.xp % 1000) / 10, 100)}%` }}></div></div></div>
-                    </div>
+                    <button onClick={onOpenStore} className="w-12 h-12 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center text-[#a51a8f] hover:scale-105 transition-transform" title="Loja de Itens">
+                        <ShoppingBag size={20} />
+                    </button>
+                    <button onClick={onOpenProfile} className="flex items-center gap-3 bg-white dark:bg-slate-800 p-1 pr-4 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow cursor-pointer h-12 text-left">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl overflow-hidden ${getFrameClass(student.equipped?.frame)}`}>{student.photoUrl ? <img src={student.photoUrl} alt={student.name} className="w-full h-full object-cover" /> : student.avatar}</div>
+                        <div className="flex flex-col justify-center"><span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide leading-tight">Nível {level}</span><div className="w-20 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full mt-1 overflow-hidden"><div className="bg-[#a51a8f] h-full rounded-full transition-all duration-500" style={{ width: `${progress}%` }}></div></div></div>
+                    </button>
                 </div>
             </header>
             <section>

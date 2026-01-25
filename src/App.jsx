@@ -9,8 +9,11 @@ import { LoginWall } from './components/LoginWall';
 import { NavButton, MobileNavButton } from './components/UIHelpers';
 import { auth, db, appId } from './firebase';
 import {
-  Home, BookOpen, CalendarDays, Gamepad2, LogOut, X, Plus, Trophy
+  Home, BookOpen, CalendarDays, Gamepad2, LogOut, X, Plus, Trophy, MessageCircle
 } from 'lucide-react';
+import { NotificationBell } from './components/NotificationBell';
+import { calculateLevel, getLevelReward } from './utils/levelLogic';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Lazy loaded views for performance
 const ViewHome = lazy(() => import('./views/ViewHome').then(module => ({ default: module.ViewHome })));
@@ -19,6 +22,9 @@ const ViewCalendar = lazy(() => import('./views/ViewCalendar').then(module => ({
 const ViewChallenges = lazy(() => import('./views/ViewChallenges').then(module => ({ default: module.ViewChallenges })));
 const AdminDashboard = lazy(() => import('./views/AdminDashboard').then(module => ({ default: module.AdminDashboard })));
 const ViewRank = lazy(() => import('./views/ViewRank').then(module => ({ default: module.ViewRank })));
+const ViewHub = lazy(() => import('./views/ViewHub').then(module => ({ default: module.ViewHub })));
+const ViewStore = lazy(() => import('./views/ViewStore').then(module => ({ default: module.ViewStore })));
+const ViewProfile = lazy(() => import('./views/ViewProfile').then(module => ({ default: module.ViewProfile })));
 
 const LoadingScreen = ({ exiting }) => (
   <div className={`min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center transition-opacity duration-700 ease-out ${exiting ? 'opacity-0' : 'opacity-100'}`}>
@@ -40,6 +46,8 @@ const App = () => {
   const [classes, setClasses] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
   const [showRank, setShowRank] = useState(false);
+  const [showStore, setShowStore] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (u) => {
@@ -97,9 +105,28 @@ const App = () => {
 
   const handleCompleteQuiz = async (quizId, xpDetails, coinDetails) => {
     if (!user) return;
+
+    // Calculate new XP and potential Level Up
+    const currentXP = user.xp || 0;
+    const currentCoins = user.coins || 0;
+    const newTotalXP = currentXP + xpDetails;
+
+    const oldLevelInfo = calculateLevel(currentXP);
+    const newLevelInfo = calculateLevel(newTotalXP);
+
+    let rewardCoins = 0;
+    if (newLevelInfo.level > oldLevelInfo.level) {
+      const levelsGained = newLevelInfo.level - oldLevelInfo.level;
+      rewardCoins = getLevelReward(levelsGained);
+      // Ideally show a toast/notification here: `Parabéns! Você subiu para o nível ${newLevelInfo.level} e ganhou ${rewardCoins} estrelas!`
+      alert(`Parabéns! Você subiu para o nível ${newLevelInfo.level} e ganhou ${rewardCoins} estrelas!`);
+    }
+
     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'students', user.id), {
       xp: increment(xpDetails),
-      coins: increment(coinDetails)
+      monthlyXP: increment(xpDetails),
+      coins: increment(coinDetails + rewardCoins),
+      level: newLevelInfo.level // Sync level to DB for easier querying, though we calculate it dynamically mostly
     });
     // Record completion in quiz
     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'quizzes', quizId), {
@@ -112,20 +139,24 @@ const App = () => {
   // If not loading and no user, show login wall
   if (!user) return <LoginWall onLogin={handleLogin} />;
 
+
+
   // Render Admin Dashboard or Student Layout
   if (user.role === 'admin' || user.role === 'teacher') {
     return (
-      <Suspense fallback={<LoadingScreen />}>
-        <SpeedInsights />
-        <ThemeToggle />
-        <AdminDashboard
-          currentUser={user}
-          students={students}
-          classes={classes}
-          quizzes={quizzes}
-          onLogout={handleLogout}
-        />
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense fallback={<LoadingScreen />}>
+          <SpeedInsights />
+          <ThemeToggle />
+          <AdminDashboard
+            currentUser={user}
+            students={students}
+            classes={classes}
+            quizzes={quizzes}
+            onLogout={handleLogout}
+          />
+        </Suspense>
+      </ErrorBoundary>
     );
   }
 
@@ -142,6 +173,7 @@ const App = () => {
         </div>
         <nav className="flex-1 p-4 space-y-2">
           <NavButton active={currentView === 'home'} onClick={() => setCurrentView('home')} icon={<Home />} label="Início" />
+          <NavButton active={currentView === 'hub'} onClick={() => setCurrentView('hub')} icon={<MessageCircle />} label="O Hub" />
           <NavButton active={currentView === 'journey'} onClick={() => setCurrentView('journey')} icon={<BookOpen />} label="Jornada" />
           <NavButton active={currentView === 'calendar'} onClick={() => setCurrentView('calendar')} icon={<CalendarDays />} label="Agenda" />
           <NavButton active={currentView === 'challenges'} onClick={() => setCurrentView('challenges')} icon={<Gamepad2 />} label="Desafios" />
@@ -160,13 +192,17 @@ const App = () => {
             {/* Mobile Header */}
             <header className="md:hidden flex justify-between items-center mb-6 sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-4 -mx-4 z-20 border-b border-slate-100 dark:border-slate-700">
               <div className="w-20"><LogoSVG className="w-full h-auto" /></div>
-              <button onClick={handleLogout} className="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400">
-                <LogOut size={18} />
-              </button>
+              <div className="flex items-center gap-2">
+                <NotificationBell userId={user.id} />
+                <button onClick={handleLogout} className="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400">
+                  <LogOut size={18} />
+                </button>
+              </div>
             </header>
 
             <Suspense fallback={<LoadingScreen />}>
-              {currentView === 'home' && <ViewHome student={user} classes={classes} onOpenRank={() => setShowRank(true)} />}
+              {currentView === 'home' && <ViewHome student={user} classes={classes} onOpenRank={() => setShowRank(true)} onOpenStore={() => setShowStore(true)} onOpenProfile={() => setShowProfile(true)} />}
+              {currentView === 'hub' && <ViewHub user={user} students={students} />}
               {currentView === 'journey' && <ViewJourney classes={classes} />}
               {currentView === 'calendar' && <ViewCalendar classes={classes} />}
               {currentView === 'challenges' && <ViewChallenges student={user} quizzes={quizzes} onCompleteQuiz={handleCompleteQuiz} />}
@@ -178,6 +214,7 @@ const App = () => {
       {/* Mobile Navigation */}
       <nav className="md:hidden fixed bottom-4 left-4 right-4 bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-black/40 border border-slate-100 dark:border-slate-700 p-2 flex justify-between items-center z-50 pb-safe">
         <MobileNavButton active={currentView === 'home'} onClick={() => setCurrentView('home')} icon={<Home size={24} />} label="Início" />
+
         <MobileNavButton active={currentView === 'challenges'} onClick={() => setCurrentView('challenges')} icon={<Gamepad2 size={24} />} label="Desafios" />
         <div className="relative -mt-8">
           <button onClick={() => setCurrentView('journey')} className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg shadow-[#a51a8f]/40 transition-transform active:scale-95 border-4 border-white dark:border-slate-900 ${currentView === 'journey' ? 'bg-[#eec00a] text-[#7d126b]' : 'bg-[#a51a8f]'}`}>
@@ -185,7 +222,7 @@ const App = () => {
           </button>
         </div>
         <MobileNavButton active={currentView === 'calendar'} onClick={() => setCurrentView('calendar')} icon={<CalendarDays size={24} />} label="Agenda" />
-        <MobileNavButton active={false} onClick={() => { setShowRank(true); }} icon={<Trophy size={24} />} label="Rank" />
+        <MobileNavButton active={currentView === 'hub'} onClick={() => setCurrentView('hub')} icon={<MessageCircle size={24} />} label="Hub" />
       </nav>
 
       {/* Rank Modal */}
@@ -200,6 +237,20 @@ const App = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Store Modal */}
+      {showStore && (
+        <Suspense fallback={<LoadingScreen />}>
+          <ViewStore user={user} onClose={() => setShowStore(false)} />
+        </Suspense>
+      )}
+
+      {/* Profile Modal */}
+      {showProfile && (
+        <Suspense fallback={<LoadingScreen />}>
+          <ViewProfile user={user} onClose={() => setShowProfile(false)} />
+        </Suspense>
       )}
 
     </div>
