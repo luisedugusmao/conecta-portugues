@@ -2,6 +2,7 @@ import React from 'react';
 import { Trophy, Star, Radio, Clock, Video, Lock, PlayCircle, FileText, BookOpen, ShoppingBag } from 'lucide-react';
 import { getFrameClass } from '../utils/items';
 import { calculateLevel } from '../utils/levelLogic';
+import { NotificationBell } from '../components/NotificationBell';
 
 export const ViewHome = ({ student, classes, onOpenRank, onOpenStore, onOpenProfile }) => {
     const myClasses = classes.filter(c => !c.assignedTo || c.assignedTo.length === 0 || c.assignedTo.includes(student.id));
@@ -13,6 +14,7 @@ export const ViewHome = ({ student, classes, onOpenRank, onOpenStore, onOpenProf
             <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
                 <div><h2 className="text-2xl font-bold text-slate-800 dark:text-white">Minha Sala de Aula</h2><p className="text-slate-500 dark:text-slate-400">Bem-vindo de volta!</p></div>
                 <div className="flex items-center gap-3 flex-wrap">
+                    <NotificationBell userId={student.id} />
                     <button
                         onClick={onOpenRank}
                         className="flex items-center gap-2 bg-[#a51a8f] hover:bg-[#8e167b] text-white px-4 py-2 rounded-full border border-[#a51a8f] shadow-sm h-12 transition-all active:scale-95"

@@ -97,6 +97,22 @@ export const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogo
             });
         } catch (err) { console.error("Feed error", err); }
 
+        // Create Notifications for Students
+        const recipients = newClass.assignedTo.length > 0 ? newClass.assignedTo : students.filter(s => s.role === 'student').map(s => s.id);
+        recipients.forEach(async (uid) => {
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'notifications'), {
+                    recipientId: uid,
+                    title: '📚 Nova Aula Adicionada',
+                    message: `Uma nova aula "${newClass.title}" foi adicionada. Confira!`,
+                    type: 'class_new',
+                    read: false,
+                    createdAt: serverTimestamp(),
+                    link: '/hub'
+                });
+            } catch (error) { console.error("Notification error", error); }
+        });
+
         setNewClass({ title: '', scheduledAt: '', description: '', link: '', type: 'meet', assignedTo: [], materials: [] }); alert(`Aula criada por ${currentUser.name}! Código: ${classCode}`);
     };
 
@@ -205,6 +221,22 @@ export const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogo
             } catch (err) { console.error("Feed error", err); }
 
             alert(`Simulado criado por ${currentUser.name}! Código: ${challengeCode}`);
+
+            // Create Notifications for Students
+            const recipients = newChallenge.assignedTo.length > 0 ? newChallenge.assignedTo : students.filter(s => s.role === 'student').map(s => s.id);
+            recipients.forEach(async (uid) => {
+                try {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'notifications'), {
+                        recipientId: uid,
+                        title: '📝 Novo Simulado Disponível',
+                        message: `O simulado "${newChallenge.title}" está disponível. Você consegue completar?`,
+                        type: 'quiz_new',
+                        read: false,
+                        createdAt: serverTimestamp(),
+                        link: '/simulados'
+                    });
+                } catch (error) { console.error("Notification error", error); }
+            });
         }
         setNewChallenge({ id: null, title: '', xpReward: 50, coinReward: 5, questions: [], assignedTo: [], deadline: '' }); setShowChallengeForm(false);
     };

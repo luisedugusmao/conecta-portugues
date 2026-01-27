@@ -15,6 +15,7 @@ import { NotificationBell } from './components/NotificationBell';
 import { calculateLevel, getLevelReward } from './utils/levelLogic';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { StudentRegistration } from './components/StudentRegistration';
+import { useClassReminders } from './hooks/useClassReminders';
 
 // Lazy loaded views for performance
 const ViewHome = lazy(() => import('./views/ViewHome').then(module => ({ default: module.ViewHome })));
@@ -145,6 +146,9 @@ const App = () => {
 
     return () => { unsubscribeAuth(); unsubStudents(); unsubClasses(); unsubQuizzes(); };
   }, [user?.id]);
+
+  // Hook for Class Reminders (10 min before & Live)
+  useClassReminders(user, classes);
 
   const handleLogin = (student) => {
     setUser(student);
