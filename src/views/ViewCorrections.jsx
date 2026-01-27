@@ -86,7 +86,7 @@ export const ViewCorrections = ({ students, quizzes }) => {
             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'notifications'), {
                 recipientId: selectedSubmission.studentId,
                 type: 'correction',
-                title: 'Desafio Corrigido!',
+                title: 'Simulado Corrigido!',
                 message: `Sua atividade "${selectedSubmission.quizTitle}" foi corrigida. Você ganhou +${bonusXP} XP bônus!`,
                 read: false,
                 createdAt: serverTimestamp(),
@@ -112,7 +112,7 @@ export const ViewCorrections = ({ students, quizzes }) => {
             <div className="bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col animate-slideUp">
                 <div className="bg-[#2d1b36] p-6 text-white flex justify-between items-center">
                     <div>
-                        <h3 className="text-xl font-bold flex items-center gap-2"><FileCheck className="text-[#eec00a]" /> Correção de Desafio</h3>
+                        <h3 className="text-xl font-bold flex items-center gap-2"><FileCheck className="text-[#eec00a]" /> Correção de Simulado</h3>
                         <p className="text-white/60 text-sm flex items-center gap-2">
                             {selectedSubmission.studentName} - {selectedSubmission.quizTitle}
                             {selectedQuizCode && <span className="bg-white/10 px-2 py-0.5 rounded text-xs font-mono text-[#eec00a]">#{selectedQuizCode}</span>}
@@ -205,7 +205,7 @@ export const ViewCorrections = ({ students, quizzes }) => {
                                 />
                                 <div className="text-xs text-slate-500">
                                     <p>XP Automático já recebido: <strong className="text-green-600">{selectedSubmission.xpAwarded || 0} XP</strong></p>
-                                    <p>XP Máximo do Desafio: <strong>{selectedSubmission.maxXP || 'N/A'} XP</strong></p>
+                                    <p>XP Máximo do Simulado: <strong>{selectedSubmission.maxXP || 'N/A'} XP</strong></p>
                                 </div>
                             </div>
                         </div>

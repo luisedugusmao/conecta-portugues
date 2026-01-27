@@ -214,7 +214,7 @@ export const ViewStudentDetails = ({ student, classes, quizzes = [], onClose }) 
                     <div class="stat-value">${student.level || 1}</div>
                 </div>
                 <div class="card">
-                    <div class="stat-label">Taxa de Acerto (Desafios)</div>
+                    <div class="stat-label">Taxa de Acerto (Simulados)</div>
                     <div class="stat-value">${stats.accuracy}%</div>
                 </div>
                 <div class="card">
@@ -233,9 +233,9 @@ export const ViewStudentDetails = ({ student, classes, quizzes = [], onClose }) 
                 ${observation || 'Nenhuma observação registrada.'}
             </div>
 
-            <div class="section-title">Histórico de Desafios</div>
+            <div class="section-title">Histórico de Simulados</div>
             <table>
-                <thead><tr><th>Data Envio</th><th>Desafio</th><th>Nota (Acertos)</th><th>Status</th></tr></thead>
+                <thead><tr><th>Data Envio</th><th>Simulado</th><th>Nota (Acertos)</th><th>Status</th></tr></thead>
                 <tbody>
                     ${submissions.slice(0, 15).map(s => `
                         <tr>
@@ -349,10 +349,10 @@ export const ViewStudentDetails = ({ student, classes, quizzes = [], onClose }) 
 
                                 <div className={`bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border ${stats.missedRate > 30 ? 'border-red-100 dark:border-red-900/30' : 'border-slate-100 dark:border-slate-700'} flex flex-col justify-between h-full`}>
                                     <div>
-                                        <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">Índice de Ausência (Desafios)</div>
+                                        <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">Índice de Ausência (Simulados)</div>
                                         <div className={`text-3xl font-bold ${stats.missedRate > 30 ? 'text-red-500' : 'text-slate-800 dark:text-white'}`}>{loading ? '...' : `${stats.missedRate}%`}</div>
                                     </div>
-                                    <p className="text-[10px] text-slate-400 mt-1">{stats.missedQuizzes} desafios não feitos</p>
+                                    <p className="text-[10px] text-slate-400 mt-1">{stats.missedQuizzes} simulados não feitos</p>
                                 </div>
 
                                 <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-between h-full">
@@ -365,7 +365,7 @@ export const ViewStudentDetails = ({ student, classes, quizzes = [], onClose }) 
 
                                 <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-between h-full">
                                     <div>
-                                        <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">Desafios Concluídos</div>
+                                        <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">Simulados Concluídos</div>
                                         <div className="text-3xl font-bold text-green-500">{stats.completedQuizzes}</div>
                                     </div>
                                     <p className="text-[10px] text-slate-400 mt-1">Total de entregas feitas</p>
@@ -375,13 +375,13 @@ export const ViewStudentDetails = ({ student, classes, quizzes = [], onClose }) 
 
                         {/* Challenges History */}
                         <section>
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2"><Trophy className="text-[#a51a8f]" /> Histórico de Desafios</h3>
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2"><Trophy className="text-[#a51a8f]" /> Histórico de Simulados</h3>
                             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
                                 <div className="max-h-60 overflow-y-auto">
                                     <table className="w-full text-left">
                                         <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 text-xs uppercase sticky top-0">
                                             <tr>
-                                                <th className="p-4">Desafio</th>
+                                                <th className="p-4">Simulado</th>
                                                 <th className="p-4">Data Envio</th>
                                                 <th className="p-4">Nota</th>
                                                 <th className="p-4">Situação</th>
@@ -408,7 +408,7 @@ export const ViewStudentDetails = ({ student, classes, quizzes = [], onClose }) 
                                                 </tr>
                                             )) : (
                                                 <tr>
-                                                    <td colspan="4" className="p-8 text-center text-slate-400">Nenhum desafio atribuído ou realizado ainda.</td>
+                                                    <td colspan="4" className="p-8 text-center text-slate-400">Nenhum simulado atribuído ou realizado ainda.</td>
                                                 </tr>
                                             )}
                                         </tbody>

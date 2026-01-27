@@ -45,7 +45,7 @@ export const ViewHome = ({ student, classes, onOpenRank, onOpenStore, onOpenProf
                 ) : (<div className="bg-white p-6 rounded-2xl border border-slate-200 text-center text-slate-500">Nenhuma aula agendada por enquanto.</div>)}
             </section>
             <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm"><h4 className="font-bold text-slate-700 mb-2 flex items-center gap-2"><Star className="w-5 h-5 text-[#eec00a]" />Destaque da Semana</h4><p className="text-sm text-slate-600">Parabéns ao aluno <strong>Lucas</strong> por completar todos os desafios de gramática!</p></div>
+                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm"><h4 className="font-bold text-slate-700 mb-2 flex items-center gap-2"><Star className="w-5 h-5 text-[#eec00a]" />Destaque da Semana</h4><p className="text-sm text-slate-600">Parabéns ao aluno <strong>Lucas</strong> por completar todos os simulados de gramática!</p></div>
                 <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm"><h4 className="font-bold text-slate-700 mb-2 flex items-center gap-2"><BookOpen className="w-5 h-5 text-blue-500" />Lembrete</h4><p className="text-sm text-slate-600">Não esqueçam de baixar o PDF da aula sobre "Verbos" na aba Jornada.</p></div>
             </section>
         </div>

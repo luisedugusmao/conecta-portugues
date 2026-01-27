@@ -9,17 +9,18 @@ import { LoginWall } from './components/LoginWall';
 import { NavButton, MobileNavButton } from './components/UIHelpers';
 import { auth, db, appId } from './firebase';
 import {
-  Home, BookOpen, CalendarDays, Gamepad2, LogOut, X, Plus, Trophy, MessageCircle
+  Home, BookOpen, CalendarDays, ClipboardList, LogOut, X, Plus, Trophy, MessageCircle
 } from 'lucide-react';
 import { NotificationBell } from './components/NotificationBell';
 import { calculateLevel, getLevelReward } from './utils/levelLogic';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { StudentRegistration } from './components/StudentRegistration';
 
 // Lazy loaded views for performance
 const ViewHome = lazy(() => import('./views/ViewHome').then(module => ({ default: module.ViewHome })));
 const ViewJourney = lazy(() => import('./views/ViewJourney').then(module => ({ default: module.ViewJourney })));
 const ViewCalendar = lazy(() => import('./views/ViewCalendar').then(module => ({ default: module.ViewCalendar })));
-const ViewChallenges = lazy(() => import('./views/ViewChallenges').then(module => ({ default: module.ViewChallenges })));
+const ViewSimulados = lazy(() => import('./views/ViewSimulados').then(module => ({ default: module.ViewSimulados })));
 const AdminDashboard = lazy(() => import('./views/AdminDashboard').then(module => ({ default: module.AdminDashboard })));
 const ViewRank = lazy(() => import('./views/ViewRank').then(module => ({ default: module.ViewRank })));
 const ViewHub = lazy(() => import('./views/ViewHub').then(module => ({ default: module.ViewHub })));
@@ -37,8 +38,15 @@ const LoadingScreen = ({ exiting }) => (
 );
 
 
+// ADMIN EMAILS - Add your email here to automatically become an admin
+const ADMIN_EMAILS = [
+  'luisedugusmao@gmail.com', // Replace with your email
+  'luisedugusmao@gmail.com'
+];
+
 const App = () => {
   const [user, setUser] = useState(null);
+  const [newUserAuth, setNewUserAuth] = useState(null); // Track new users waiting for registration
   const [loading, setLoading] = useState(true);
   const [showLoading, setShowLoading] = useState(true);
   const [currentView, setCurrentView] = useState('home');
@@ -50,22 +58,75 @@ const App = () => {
   const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, async (u) => {
-      setLoading(false);
-      if (u) {
-        // User is logged in
+    // Auth Listener
+    const unsubscribeAuth = onAuthStateChanged(auth, async (authUser) => {
+      setLoading(true);
+      if (authUser) {
+        // User is logged in, check if profile exists
+        const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', authUser.uid);
+
+        // We use onSnapshot to get real-time updates of the user profile
+        const unsubUser = onSnapshot(userRef, async (docSnap) => {
+          if (docSnap.exists()) {
+            // Student profile exists, load it
+            setUser({ id: authUser.uid, ...docSnap.data() });
+            setLoading(false);
+          } else {
+            // NEW USER: No profile found
+            // Instead of auto-creating, we set the newUserAuth state
+            // This will trigger the StudentRegistration component to render
+            console.log("No profile found, waiting for registration...");
+            setUser(null); // Ensure user is null so main app doesn't load
+            setNewUserAuth(authUser); // Trigger registration flow
+            setLoading(false);
+          }
+        });
+
+        // Cleanup this internal listener when auth changes
+        return () => unsubUser();
+
+      } else {
+        // User logged out
+        setUser(null);
+        setNewUserAuth(null);
+        setLoading(false);
       }
       setTimeout(() => setShowLoading(false), 700);
     });
 
+    // ... Other listeners remain the same ...
+
     const qStudents = query(collection(db, 'artifacts', appId, 'public', 'data', 'students'));
-    const unsubStudents = onSnapshot(qStudents, (snap) => {
+    const unsubStudents = onSnapshot(qStudents, async (snap) => {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setStudents(data);
       // Update current user if data changes
       if (user) {
         const updated = data.find(s => s.id === user.id);
-        if (updated) setUser(updated);
+        if (updated) {
+          console.log("Current user data:", updated);
+          console.log("Is Admin Email?", ADMIN_EMAILS.includes(updated.email));
+
+          // AUTO-PROMOTE ADMIN
+          // Force lowercase check to avoid sensitive issues
+          const isAdminEmail = ADMIN_EMAILS.map(e => e.toLowerCase().trim()).includes(updated.email?.toLowerCase().trim());
+
+          if (isAdminEmail && updated.role !== 'admin') {
+            console.log("Promoting user to admin (ATTEMPTING):", updated.email);
+
+            try {
+              const { updateDoc, doc } = await import('firebase/firestore');
+              const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', user.id);
+              await updateDoc(userRef, { role: 'admin' });
+              console.log("SUCCESS: User promoted to admin in Firestore!");
+              updated.role = 'admin'; // Update local immediately
+            } catch (err) {
+              console.error("FAILED to promote user:", err);
+              alert("Erro ao tentar virar admin: " + err.message);
+            }
+          }
+          setUser(updated);
+        }
       }
     });
 
@@ -96,9 +157,11 @@ const App = () => {
     }, 800);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (confirm('Sair do sistema?')) {
-      setUser(null);
+      const { signOut } = await import('firebase/auth');
+      await signOut(auth);
+      // setUser(null); // Auth listener will handle this
       setCurrentView('home');
     }
   };
@@ -122,11 +185,19 @@ const App = () => {
       alert(`Parabéns! Você subiu para o nível ${newLevelInfo.level} e ganhou ${rewardCoins} estrelas!`);
     }
 
+    const quiz = quizzes.find(q => q.id === quizId);
+    const quizTitle = quiz ? quiz.title : 'Quiz';
+
     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'students', user.id), {
       xp: increment(xpDetails),
       monthlyXP: increment(xpDetails),
       coins: increment(coinDetails + rewardCoins),
-      level: newLevelInfo.level // Sync level to DB for easier querying, though we calculate it dynamically mostly
+      level: newLevelInfo.level,
+      xpHistory: arrayUnion({
+        action: `Quiz Completado: ${quizTitle}`,
+        xp: xpDetails,
+        date: new Date() // Basic JS Date, Firestore converts to Timestamp
+      })
     });
     // Record completion in quiz
     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'quizzes', quizId), {
@@ -135,9 +206,15 @@ const App = () => {
   };
 
   // Show loading screen if we are technically loading OR if we are showing the exit animation
-  if (showLoading && !user) return <LoadingScreen exiting={!loading} />;
+  if (showLoading && !user && !newUserAuth) return <LoadingScreen exiting={!loading} />;
+
+  // NEW USER REGISTRATION
+  if (newUserAuth) {
+    return <StudentRegistration authUser={newUserAuth} onComplete={(student) => { setUser(student); setNewUserAuth(null); }} />;
+  }
+
   // If not loading and no user, show login wall
-  if (!user) return <LoginWall onLogin={handleLogin} />;
+  if (!user) return <LoginWall />;
 
 
 
@@ -176,7 +253,7 @@ const App = () => {
           <NavButton active={currentView === 'hub'} onClick={() => setCurrentView('hub')} icon={<MessageCircle />} label="O Hub" />
           <NavButton active={currentView === 'journey'} onClick={() => setCurrentView('journey')} icon={<BookOpen />} label="Jornada" />
           <NavButton active={currentView === 'calendar'} onClick={() => setCurrentView('calendar')} icon={<CalendarDays />} label="Agenda" />
-          <NavButton active={currentView === 'challenges'} onClick={() => setCurrentView('challenges')} icon={<Gamepad2 />} label="Desafios" />
+          <NavButton active={currentView === 'simulados'} onClick={() => setCurrentView('simulados')} icon={<ClipboardList />} label="Simulados" />
         </nav>
         <div className="p-4 border-t border-slate-100 dark:border-slate-700">
           <button onClick={handleLogout} className="flex items-center gap-3 w-full p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-all font-medium text-sm">
@@ -205,7 +282,7 @@ const App = () => {
               {currentView === 'hub' && <ViewHub user={user} students={students} />}
               {currentView === 'journey' && <ViewJourney classes={classes} />}
               {currentView === 'calendar' && <ViewCalendar classes={classes} />}
-              {currentView === 'challenges' && <ViewChallenges student={user} quizzes={quizzes} onCompleteQuiz={handleCompleteQuiz} />}
+              {currentView === 'simulados' && <ViewSimulados student={user} quizzes={quizzes} onCompleteQuiz={handleCompleteQuiz} />}
             </Suspense>
           </div>
         </BackgroundPaths>
@@ -215,7 +292,7 @@ const App = () => {
       <nav className="md:hidden fixed bottom-4 left-4 right-4 bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-black/40 border border-slate-100 dark:border-slate-700 p-2 flex justify-between items-center z-50 pb-safe">
         <MobileNavButton active={currentView === 'home'} onClick={() => setCurrentView('home')} icon={<Home size={24} />} label="Início" />
 
-        <MobileNavButton active={currentView === 'challenges'} onClick={() => setCurrentView('challenges')} icon={<Gamepad2 size={24} />} label="Desafios" />
+        <MobileNavButton active={currentView === 'simulados'} onClick={() => setCurrentView('simulados')} icon={<ClipboardList size={24} />} label="Simulados" />
         <div className="relative -mt-8">
           <button onClick={() => setCurrentView('journey')} className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg shadow-[#a51a8f]/40 transition-transform active:scale-95 border-4 border-white dark:border-slate-900 ${currentView === 'journey' ? 'bg-[#eec00a] text-[#7d126b]' : 'bg-[#a51a8f]'}`}>
             <BookOpen size={24} />
