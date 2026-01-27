@@ -12,6 +12,7 @@ const AVATAR_OPTIONS = [
 export const StudentRegistration = ({ authUser, onComplete }) => {
     const [studentName, setStudentName] = useState('');
     const [selectedAvatar, setSelectedAvatar] = useState('🧑‍🎓');
+    const [schoolYear, setSchoolYear] = useState('6º Ano');
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState(1); // 1: Info, 2: Success
 
@@ -28,6 +29,7 @@ export const StudentRegistration = ({ authUser, onComplete }) => {
                 email: authUser.email,
                 parentName: authUser.displayName || 'Responsável',
                 avatar: selectedAvatar,
+                schoolYear: schoolYear,
                 xp: 0,
                 coins: 0,
                 level: 1,
@@ -112,6 +114,24 @@ export const StudentRegistration = ({ authUser, onComplete }) => {
                                 />
                             </div>
                         </div>
+
+                        <div className="space-y-2">
+                            <label className="text-white/80 text-sm font-medium ml-1">Série / Ano</label>
+                            <div className="grid grid-cols-2 gap-3">
+                                {['6º Ano', '7º Ano', '8º Ano', '9º Ano'].map(year => (
+                                    <button
+                                        key={year}
+                                        type="button"
+                                        onClick={() => setSchoolYear(year)}
+                                        className={`py-3 rounded-xl text-sm font-bold transition-all border ${schoolYear === year ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/40' : 'bg-black/20 border-white/10 text-white/70 hover:bg-white/5'}`}
+                                    >
+                                        {year}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+
 
                         <button
                             type="submit"

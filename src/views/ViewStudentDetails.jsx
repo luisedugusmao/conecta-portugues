@@ -3,11 +3,17 @@ import { collection, query, where, getDocs, doc, updateDoc, serverTimestamp } fr
 import { db, appId } from '../firebase';
 import {
     X, Printer, Save, GraduationCap, Star, Trophy, Target,
-    BookOpen, Calendar, MessageSquare, AlertCircle, TrendingUp, AlertTriangle, CheckCircle
+    BookOpen, Calendar, MessageSquare, AlertCircle, TrendingUp, AlertTriangle, CheckCircle, BarChart2
 } from 'lucide-react';
+import {
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+    BarChart, Bar, Cell
+} from 'recharts';
 
-export const ViewStudentDetails = ({ student, classes, quizzes = [], onClose }) => {
+export const ViewStudentDetails = ({ student, allStudents = [], classes, quizzes = [], onClose }) => {
     const [submissions, setSubmissions] = useState([]);
+    const [performanceData, setPerformanceData] = useState([]);
+    const [xpComparisonData, setXpComparisonData] = useState([]);
     const [stats, setStats] = useState({
         accuracy: 0,
         totalQuizzes: 0,
@@ -29,13 +35,17 @@ export const ViewStudentDetails = ({ student, classes, quizzes = [], onClose }) 
             if (!student?.id) return;
 
             try {
-                // Fetch Submissions
+                // Fetch ALL Submissions for class comparison
                 const q = query(
-                    collection(db, 'artifacts', appId, 'public', 'data', 'submissions'),
-                    where("studentId", "==", student.id)
+                    collection(db, 'artifacts', appId, 'public', 'data', 'submissions')
                 );
                 const querySnapshot = await getDocs(q);
-                const subs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const allSubmissions = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                const studentSubmissions = allSubmissions.filter(s => s.studentId === student.id);
+                // Use studentSubmissions for individual stats, allSubmissions for averages
+
+                const subs = studentSubmissions;
 
                 // --- Advanced Stats Calculation ---
 
@@ -118,6 +128,49 @@ export const ViewStudentDetails = ({ student, classes, quizzes = [], onClose }) 
                     averageScore: completedCount > 0 ? (totalScore / completedCount).toFixed(1) : 0,
                     classesThisMonth
                 });
+
+                // --- Comparative Charts Calculation ---
+
+                // 1. Monthly Performance Evolution (Line Chart)
+                const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                // Group by month (0-11)
+                const monthlyData = {};
+
+                allSubmissions.forEach(s => {
+                    const d = s.submittedAt ? new Date(s.submittedAt.seconds * 1000) : new Date();
+                    const monthKey = d.getMonth();
+
+                    if (!monthlyData[monthKey]) monthlyData[monthKey] = { month: months[monthKey], studentTotal: 0, studentCount: 0, classTotal: 0, classCount: 0 };
+
+                    // Add to class stats
+                    monthlyData[monthKey].classTotal += (s.score || 0);
+                    monthlyData[monthKey].classCount += 1;
+
+                    // Add to student stats if applicable
+                    if (s.studentId === student.id) {
+                        monthlyData[monthKey].studentTotal += (s.score || 0);
+                        monthlyData[monthKey].studentCount += 1;
+                    }
+                });
+
+                const chartData = Object.keys(monthlyData).sort((a, b) => parseInt(a) - parseInt(b)).map(key => {
+                    const d = monthlyData[key];
+                    return {
+                        name: d.month,
+                        'Aluno': d.studentCount > 0 ? Math.round(d.studentTotal / d.studentCount) : null,
+                        'Média da Turma': d.classCount > 0 ? Math.round(d.classTotal / d.classCount) : 0
+                    };
+                });
+                setPerformanceData(chartData);
+
+                // 2. XP Comparison (Bar Chart)
+                const totalXp = allStudents.reduce((acc, curr) => acc + (curr.xp || 0), 0);
+                const avgXp = allStudents.length > 0 ? Math.round(totalXp / allStudents.length) : 0;
+
+                setXpComparisonData([
+                    { name: 'Meu XP', value: student.xp || 0, color: '#a51a8f' },
+                    { name: 'Média da Turma', value: avgXp, color: '#94a3b8' }
+                ]);
 
             } catch (err) {
                 console.error("Error fetching student details:", err);
@@ -226,6 +279,33 @@ export const ViewStudentDetails = ({ student, classes, quizzes = [], onClose }) 
                     <div class="stat-value">${stats.classesThisMonth}</div>
                 </div>
             </div>
+
+            <!-- Comparative Charts Logic -->
+            ${submissions.length > 0 ? `
+            <div class="section-title">Evolução Pedagógica</div>
+            <div class="grid">
+                <div class="card" style="page-break-inside: avoid;">
+                    <div class="stat-label" style="margin-bottom:10px;">Evolução de Notas</div>
+                    <!-- Fixed height container for print -->
+                    <div style="height: 300px; width: 100%;">
+                        ${document.getElementById('print-evolution-chart')?.innerHTML || '<p class="stat-label">Gráfico indisponível</p>'}
+                    </div>
+                </div>
+                <div class="card" style="page-break-inside: avoid;">
+                    <div class="stat-label" style="margin-bottom:10px;">Comparativo de XP</div>
+                    <!-- Fixed height container for print -->
+                    <div style="height: 300px; width: 100%;">
+                        ${document.getElementById('print-xp-chart')?.innerHTML || '<p class="stat-label">Gráfico indisponível</p>'}
+                    </div>
+                </div>
+            </div>
+            ` : `
+            <div class="section-title">Evolução Pedagógica</div>
+            <div class="card" style="text-align: center; padding: 30px; border-style: dashed;">
+                <p style="font-weight: bold; color: #94a3b8;">Histórico Insuficiente</p>
+                <p style="font-size: 12px; color: #cbd5e1; margin-top:5px;">Realize mais simulados para visualizar os gráficos de evolução comparativa.</p>
+            </div>
+            `}
 
             <div class="section-title">Análise Pedagógica</div>
             <div class="observation">
@@ -373,6 +453,66 @@ export const ViewStudentDetails = ({ student, classes, quizzes = [], onClose }) 
                             </div>
                         </section>
 
+                        {/* Comparative Charts Section */}
+                        <section>
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2"><TrendingUp className="text-[#a51a8f]" /> Evolução Pedagógica</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Evolution Chart */}
+                                {/* Evolution Chart */}
+                                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                                    <h4 className="text-sm font-bold text-slate-500 mb-4 uppercase tracking-wider">Evolução de Notas (Média Mensal)</h4>
+                                    <div id="print-evolution-chart" className="h-64 w-full">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <LineChart data={performanceData}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                                                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} domain={[0, 10]} />
+                                                <Tooltip
+                                                    contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                                    itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
+                                                />
+                                                <Legend />
+                                                <Line type="monotone" dataKey="Aluno" stroke="#a51a8f" strokeWidth={3} dot={{ r: 4, fill: '#a51a8f', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} connectNulls />
+                                                <Line type="monotone" dataKey="Média da Turma" stroke="#cbd5e1" strokeWidth={2} dot={{ r: 3, fill: '#cbd5e1' }} connectNulls />
+                                            </LineChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                    <p className="text-xs text-slate-400 mt-2 text-center">Comparativo da média de notas do aluno vs a turma.</p>
+                                </div>
+
+                                {/* XP Comparison Chart */}
+                                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                                    <h4 className="text-sm font-bold text-slate-500 mb-4 uppercase tracking-wider">Desempenho Geral (XP Acumulado)</h4>
+                                    <div id="print-xp-chart" className="h-64 w-full">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={xpComparisonData} layout="vertical" margin={{ left: 20 }}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={true} vertical={false} />
+                                                <XAxis type="number" hide />
+                                                <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} width={100} />
+                                                <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '12px' }} />
+                                                <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={32}>
+                                                    {xpComparisonData.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                                    ))}
+                                                </Bar>
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                    <div className="flex justify-between items-center mt-4 px-4">
+                                        <div className="text-center">
+                                            <p className="text-xs text-slate-400">Meu XP</p>
+                                            <p className="text-xl font-bold text-[#a51a8f]">{student.xp || 0}</p>
+                                        </div>
+                                        <div className="h-8 w-px bg-slate-100"></div>
+                                        <div className="text-center">
+                                            <p className="text-xs text-slate-400">Média da Turma</p>
+                                            <p className="text-xl font-bold text-slate-400">{Math.round(allStudents.reduce((acc, curr) => acc + (curr.xp || 0), 0) / (allStudents.length || 1))}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
                         {/* Challenges History */}
                         <section>
                             <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2"><Trophy className="text-[#a51a8f]" /> Histórico de Simulados</h3>
@@ -467,7 +607,7 @@ export const ViewStudentDetails = ({ student, classes, quizzes = [], onClose }) 
 
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };

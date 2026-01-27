@@ -16,12 +16,10 @@ import { generateNextId } from '../utils/idGenerator';
 
 export const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogout }) => {
     const [currentView, setCurrentView] = useState('overview');
-    const [showStudentForm, setShowStudentForm] = useState(false);
+    const [editingStudent, setEditingStudent] = useState(null);
     const [classFilterYear, setClassFilterYear] = useState('Todos');
     const [editingClass, setEditingClass] = useState(null);
     const [selectedStudent, setSelectedStudent] = useState(null);
-
-    const [newStudentData, setNewStudentData] = useState({ name: '', age: '', gender: 'Masculino', parentName: '', parentEmail: '', parentPhone: '', studentPhone: '', schoolYear: '6º Ano', photoUrl: '' });
     // Updated newClass state to include scheduledAt
     const [newClass, setNewClass] = useState({ title: '', scheduledAt: '', description: '', link: '', type: 'meet', assignedTo: [], materials: [] });
     const [materialInput, setMaterialInput] = useState({ title: '', type: 'pdf', url: '' });
@@ -34,19 +32,27 @@ export const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogo
     const totalClasses = classes.length;
     const totalRevenue = totalStudents * 150;
 
-    const handleAddStudent = async () => {
-        if (!newStudentData.name || !newStudentData.parentName || !newStudentData.parentEmail) return alert("Preencha campos obrigatórios.");
+    const handleUpdateStudent = async () => {
+        if (!editingStudent || !editingStudent.name || !editingStudent.parentName) return alert("Preencha campos obrigatórios.");
 
-        // Use sequential ID for manual registry
-        const newId = await generateNextId('students', 'ALUNO');
-
-        let userCode; let isUnique = false; const namePart = newStudentData.name.substring(0, 3).toUpperCase();
-        let attempts = 0;
-        while (!isUnique && attempts < 100) { const numPart = Math.floor(1000 + Math.random() * 9000); userCode = `${namePart}${numPart}`; if (!students.some(s => s.userCode === userCode)) isUnique = true; attempts++; }
-        if (!isUnique) return alert("Erro ao gerar código.");
-        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'students', newId), { id: newId, ...newStudentData, userCode, avatar: '🧑‍🎓', photoUrl: newStudentData.photoUrl || '', xp: 0, level: 1, coins: 0, password: '1234', role: 'student' });
-        setNewStudentData({ name: '', age: '', gender: 'Masculino', parentName: '', parentEmail: '', parentPhone: '', studentPhone: '', schoolYear: '6º Ano', photoUrl: '' });
-        setShowStudentForm(false); alert(`Aluno cadastrado! Código: ${userCode}`);
+        try {
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'students', editingStudent.id), {
+                name: editingStudent.name || '',
+                age: editingStudent.age || '',
+                gender: editingStudent.gender || 'Masculino',
+                schoolYear: editingStudent.schoolYear || '6º Ano',
+                photoUrl: editingStudent.photoUrl || '',
+                studentPhone: editingStudent.studentPhone || '',
+                parentName: editingStudent.parentName || '',
+                parentEmail: editingStudent.parentEmail || '',
+                parentPhone: editingStudent.parentPhone || ''
+            });
+            setEditingStudent(null);
+            alert('Dados do aluno atualizados!');
+        } catch (error) {
+            console.error("Erro ao atualizar aluno:", error);
+            alert("Erro ao atualizar.");
+        }
     };
 
     const handleAddMaterialToClass = () => { if (!materialInput.title) return alert("Título obrigatório."); setNewClass({ ...newClass, materials: [...newClass.materials, { ...materialInput }] }); setMaterialInput({ title: '', type: 'pdf', url: '' }); };
@@ -108,6 +114,18 @@ export const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogo
         });
         setEditingClass(null);
         alert('Aula atualizada!');
+    };
+
+    const handleDeleteStudent = async (studentId, studentName) => {
+        if (confirm(`Tem certeza que deseja excluir o aluno ${studentName}? Essa ação não pode ser desfeita.`)) {
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'students', studentId));
+                alert('Aluno excluído com sucesso.');
+            } catch (error) {
+                console.error("Erro ao excluir aluno:", error);
+                alert('Erro ao excluir aluno.');
+            }
+        }
     };
 
     const toggleClassStatus = async (cls, status) => {
@@ -272,8 +290,104 @@ export const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogo
             case 'students':
                 return (
                     <div className="space-y-6 animate-fadeIn">
-                        {!showStudentForm ? (<div className="flex justify-end"><button onClick={() => setShowStudentForm(true)} className="bg-[#a51a8f] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#7d126b] shadow-lg shadow-[#a51a8f]/30 flex items-center gap-2 transition-all transform hover:scale-105"><UserPlus size={20} /> Registrar Novo Aluno</button></div>) : (<div className="bg-white p-6 rounded-2xl shadow-lg border border-[#a51a8f]/20 animate-slideUp relative"><div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4"><h3 className="font-bold text-lg text-slate-800 flex items-center gap-2"><UserPlus size={20} className="text-[#a51a8f]" /> Preencha os Dados do Novo Aluno</h3><button onClick={() => setShowStudentForm(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400"><X size={20} /></button></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div className="col-span-1 md:col-span-2 text-xs font-bold text-slate-400 uppercase tracking-wider mt-2">Dados do Aluno</div><div className="col-span-1 md:col-span-2 flex gap-4"><div className="flex-1"><input type="text" placeholder="Nome Completo" value={newStudentData.name} onChange={(e) => setNewStudentData({ ...newStudentData, name: e.target.value })} className="w-full border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /></div><div className="flex-1"><input type="text" placeholder="URL da Foto (Opcional)" value={newStudentData.photoUrl} onChange={(e) => setNewStudentData({ ...newStudentData, photoUrl: e.target.value })} className="w-full border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /></div></div><div className="flex gap-4"><input type="number" placeholder="Idade" value={newStudentData.age} onChange={(e) => setNewStudentData({ ...newStudentData, age: e.target.value })} className="w-1/3 border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /><select value={newStudentData.gender} onChange={(e) => setNewStudentData({ ...newStudentData, gender: e.target.value })} className="w-2/3 border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none"><option value="Masculino">Masculino</option><option value="Feminino">Feminino</option><option value="Outro">Outro</option></select></div><select value={newStudentData.schoolYear} onChange={(e) => setNewStudentData({ ...newStudentData, schoolYear: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none"><option value="6º Ano">6º Ano</option><option value="7º Ano">7º Ano</option><option value="8º Ano">8º Ano</option><option value="9º Ano">9º Ano</option></select><input type="text" placeholder="WhatsApp Aluno" value={newStudentData.studentPhone} onChange={(e) => setNewStudentData({ ...newStudentData, studentPhone: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /><div className="col-span-1 md:col-span-2 text-xs font-bold text-slate-400 uppercase tracking-wider mt-4">Dados do Responsável</div><input type="text" placeholder="Nome Responsável" value={newStudentData.parentName} onChange={(e) => setNewStudentData({ ...newStudentData, parentName: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /><input type="email" placeholder="Email Responsável" value={newStudentData.parentEmail} onChange={(e) => setNewStudentData({ ...newStudentData, parentEmail: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /><input type="text" placeholder="WhatsApp Responsável" value={newStudentData.parentPhone} onChange={(e) => setNewStudentData({ ...newStudentData, parentPhone: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" /></div><div className="mt-8 flex justify-end gap-3 border-t border-slate-100 pt-4"><button onClick={() => setShowStudentForm(false)} className="px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors">Cancelar</button><button onClick={handleAddStudent} className="bg-[#a51a8f] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#7d126b] shadow-lg shadow-[#a51a8f]/30 flex items-center gap-2 transition-transform transform hover:scale-105 active:scale-95"><Save size={18} /> Salvar Cadastro</button></div></div>)}
-                        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"><table className="w-full text-left"><thead className="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th className="p-4">Aluno</th><th className="p-4">Código</th><th className="p-4">Ano</th><th className="p-4">Responsável</th><th className="p-4">XP</th></tr></thead><tbody className="divide-y divide-slate-100">{students.filter(s => s.role === 'student').map(st => (<tr key={st.id} onClick={() => setSelectedStudent(st)} className="hover:bg-slate-50 text-sm cursor-pointer transition-colors"><td className="p-4 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xl overflow-hidden shrink-0">{st.photoUrl ? <img src={st.photoUrl} alt={st.name} className="w-full h-full object-cover" /> : st.avatar}</div><div><p className="font-bold text-slate-700">{st.name}</p><p className="text-xs text-slate-400">{st.studentPhone || 'Sem cel'}</p></div></td><td className="p-4"><span className="font-mono bg-slate-100 px-2 py-1 rounded text-slate-600 font-bold">{st.userCode || 'N/A'}</span></td><td className="p-4"><span className="bg-[#fff9db] text-[#b89508] px-2 py-1 rounded text-xs font-bold border border-[#eec00a]">{st.schoolYear || '-'}</span></td><td className="p-4"><p className="text-slate-700">{st.parentName || '-'}</p><p className="text-xs text-slate-400">{st.parentPhone || '-'}</p></td><td className="p-4 font-bold text-[#a51a8f]">{st.xp}</td></tr>))}</tbody></table></div>
+                        {editingStudent ? (
+                            <div className="bg-white p-6 rounded-2xl shadow-lg border border-[#a51a8f]/20 animate-slideUp relative">
+                                <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+                                    <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+                                        <Edit size={20} className="text-[#a51a8f]" /> Editar Aluno: {editingStudent.name}
+                                    </h3>
+                                    <button onClick={() => setEditingStudent(null)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400">
+                                        <X size={20} />
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="col-span-1 md:col-span-2 text-xs font-bold text-slate-400 uppercase tracking-wider mt-2">Dados do Aluno</div>
+                                    <div className="col-span-1 md:col-span-2 flex gap-4">
+                                        <div className="flex-1">
+                                            <input type="text" placeholder="Nome Completo" value={editingStudent.name || ''} onChange={(e) => setEditingStudent({ ...editingStudent, name: e.target.value })} className="w-full border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <input type="text" placeholder="URL da Foto (Opcional)" value={editingStudent.photoUrl || ''} onChange={(e) => setEditingStudent({ ...editingStudent, photoUrl: e.target.value })} className="w-full border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" />
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-4">
+                                        <input type="number" placeholder="Idade" value={editingStudent.age || ''} onChange={(e) => setEditingStudent({ ...editingStudent, age: e.target.value })} className="w-1/3 border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" />
+                                        <select value={editingStudent.gender || 'Masculino'} onChange={(e) => setEditingStudent({ ...editingStudent, gender: e.target.value })} className="w-2/3 border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none">
+                                            <option value="Masculino">Masculino</option>
+                                            <option value="Feminino">Feminino</option>
+                                            <option value="Outro">Outro</option>
+                                        </select>
+                                    </div>
+                                    <select value={editingStudent.schoolYear || '6º Ano'} onChange={(e) => setEditingStudent({ ...editingStudent, schoolYear: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none">
+                                        <option value="6º Ano">6º Ano</option>
+                                        <option value="7º Ano">7º Ano</option>
+                                        <option value="8º Ano">8º Ano</option>
+                                        <option value="9º Ano">9º Ano</option>
+                                    </select>
+                                    <input type="text" placeholder="WhatsApp Aluno" value={editingStudent.studentPhone || ''} onChange={(e) => setEditingStudent({ ...editingStudent, studentPhone: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" />
+
+                                    <div className="col-span-1 md:col-span-2 text-xs font-bold text-slate-400 uppercase tracking-wider mt-4">Dados do Responsável</div>
+                                    <input type="text" placeholder="Nome Responsável" value={editingStudent.parentName || ''} onChange={(e) => setEditingStudent({ ...editingStudent, parentName: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" />
+                                    <input type="email" placeholder="Email Responsável" value={editingStudent.parentEmail || ''} onChange={(e) => setEditingStudent({ ...editingStudent, parentEmail: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" />
+                                    <input type="text" placeholder="WhatsApp Responsável" value={editingStudent.parentPhone || ''} onChange={(e) => setEditingStudent({ ...editingStudent, parentPhone: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none" />
+                                </div>
+                                <div className="mt-8 flex justify-end gap-3 border-t border-slate-100 pt-4">
+                                    <button onClick={() => setEditingStudent(null)} className="px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors">Cancelar</button>
+                                    <button onClick={handleUpdateStudent} className="bg-[#a51a8f] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#7d126b] shadow-lg shadow-[#a51a8f]/30 flex items-center gap-2 transition-transform transform hover:scale-105 active:scale-95">
+                                        <Save size={18} /> Salvar Alterações
+                                    </button>
+                                </div>
+                            </div>
+                        ) : null}
+
+                        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-slate-50 text-slate-500 text-xs uppercase">
+                                    <tr>
+                                        <th className="p-4 whitespace-nowrap">Aluno</th>
+                                        <th className="p-4 whitespace-nowrap">Série</th>
+                                        <th className="p-4 whitespace-nowrap hidden md:table-cell">Responsável</th>
+                                        <th className="p-4 whitespace-nowrap hidden md:table-cell">XP</th>
+                                        <th className="p-4 text-right whitespace-nowrap">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {students.filter(s => s.role === 'student').map(st => (
+                                        <tr key={st.id} onClick={() => setSelectedStudent(st)} className="hover:bg-slate-50 text-sm cursor-pointer transition-colors">
+                                            <td className="p-4 flex items-center gap-3 min-w-[180px]">
+                                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xl overflow-hidden shrink-0">
+                                                    {st.photoUrl ? <img src={st.photoUrl} alt={st.name} className="w-full h-full object-cover" /> : st.avatar}
+                                                </div>
+                                                <div className="truncate max-w-[120px] md:max-w-none">
+                                                    <p className="font-bold text-slate-700 truncate">{st.name}</p>
+                                                    <p className="text-xs text-slate-400">{st.studentPhone || 'Sem cel'}</p>
+                                                </div>
+                                            </td>
+                                            <td className="p-4">
+                                                <span className="bg-[#fff9db] text-[#b89508] px-2 py-1 rounded text-xs font-bold border border-[#eec00a] whitespace-nowrap">
+                                                    {st.schoolYear ? st.schoolYear.split(' ')[0] : '-'}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 hidden md:table-cell">
+                                                <p className="text-slate-700">{st.parentName || '-'}</p>
+                                                <p className="text-xs text-slate-400">{st.parentPhone || '-'}</p>
+                                            </td>
+                                            <td className="p-4 font-bold text-[#a51a8f] hidden md:table-cell">{st.xp}</td>
+                                            <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
+                                                <div className="flex justify-end gap-2">
+                                                    <button onClick={() => setEditingStudent(st)} className="p-2 text-slate-400 hover:text-[#a51a8f] hover:bg-slate-100 rounded-lg transition-colors" title="Editar Aluno">
+                                                        <Edit size={18} />
+                                                    </button>
+                                                    <button onClick={() => handleDeleteStudent(st.id, st.name)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Excluir Aluno">
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 );
             case 'classes':
@@ -390,7 +504,15 @@ export const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogo
         <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col md:flex-row">
             <aside className="hidden md:flex flex-col w-64 bg-[#2d1b36] text-white h-screen sticky top-0"><div className="p-6 border-b border-white/10 flex flex-col items-center justify-center"><div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-3xl mb-3">{currentUser.avatar}</div><div className="text-center"><h1 className="font-bold text-lg text-[#eec00a]">{currentUser.name}</h1><p className="text-xs text-white/50 uppercase tracking-widest">{currentUser.role === 'admin' ? 'Diretoria' : 'Professor'}</p></div></div><nav className="flex-1 p-4 space-y-2"><NavButton active={currentView === 'overview'} onClick={() => setCurrentView('overview')} icon={<Home />} label="Visão Geral" dark /><NavButton active={currentView === 'students'} onClick={() => setCurrentView('students')} icon={<Users />} label="Alunos" dark /><NavButton active={currentView === 'classes'} onClick={() => setCurrentView('classes')} icon={<Video />} label="Gestão de Aulas" dark /><NavButton active={currentView === 'challenges'} onClick={() => setCurrentView('challenges')} icon={<FileText />} label="Criar Simulados" dark /><NavButton active={currentView === 'corrections'} onClick={() => setCurrentView('corrections')} icon={<FileCheck />} label="Correções" dark /><NavButton active={currentView === 'calendar'} onClick={() => setCurrentView('calendar')} icon={<CalendarDays />} label="Agenda" dark /></nav><div className="p-4 border-t border-white/10"><button onClick={onLogout} className="flex items-center gap-3 w-full p-3 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-all font-medium text-sm"><LogOut size={18} /> Sair</button></div></aside>
             <main className="flex-1 max-w-5xl mx-auto w-full p-4 md:p-8"><header className="md:hidden flex justify-between items-center mb-6"><div className="w-32"><LogoSVG className="w-full h-auto" /></div><button onClick={onLogout}><LogOut size={20} /></button></header><h2 className="text-2xl font-bold text-slate-800 mb-6 capitalize">{currentView === 'overview' ? 'Visão Geral' : currentView}</h2>{renderContent()}
-                {selectedStudent && <ViewStudentDetails student={selectedStudent} classes={classes} quizzes={quizzes} onClose={() => setSelectedStudent(null)} />}
+                {selectedStudent && (
+                    <ViewStudentDetails
+                        student={selectedStudent}
+                        allStudents={students}
+                        classes={classes}
+                        quizzes={quizzes}
+                        onClose={() => setSelectedStudent(null)}
+                    />
+                )}
             </main>
             <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 grid grid-cols-6 gap-0.5 px-1 py-1 z-50 pb-safe">
                 <MobileNavButton active={currentView === 'overview'} onClick={() => setCurrentView('overview')} icon={<Home size={18} />} label="Home" compact />
