@@ -31,27 +31,28 @@ export const ViewHub = ({ user, students = [] }) => {
     useEffect(() => {
         const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'channels'), orderBy('createdAt', 'asc'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            if (snapshot.empty && user.role === 'admin') {
-                // Seed defaults if empty and admin
-                DEFAULT_CHANNELS.forEach(async (ch, index) => {
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'channels', ch.id), {
-                        ...ch,
-                        createdAt: serverTimestamp(),
-                        order: index
+            try {
+                if (snapshot.empty && user.role === 'admin') {
+                    // Seed defaults if empty and admin
+                    DEFAULT_CHANNELS.forEach(async (ch, index) => {
+                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'channels', ch.id), {
+                            ...ch,
+                            createdAt: serverTimestamp(),
+                            order: index
+                        });
                     });
-                });
-            } else {
-                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                if (data.length > 0) {
-                    // Sort manually by 'order' or fallback to index if needed, though orderBy createdAt helps
-                    // Explicit sort by order if available
-                    data.sort((a, b) => (a.order || 0) - (b.order || 0));
-                    setChannels(data);
                 } else {
-                    // Fallback to defaults purely for display if strictly empty and not admin (though seed should happen)
-                    // But better to wait for seed.
+                    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    if (data.length > 0) {
+                        data.sort((a, b) => (a.order || 0) - (b.order || 0));
+                        setChannels(data);
+                    }
                 }
+            } catch (error) {
+                console.error("ViewHub channels snapshot error:", error);
             }
+        }, (error) => {
+            console.error("ViewHub channels listener failed:", error);
         });
         return () => unsubscribe();
     }, [user.role]); // Depend on user.role to trigger seed check
@@ -81,12 +82,18 @@ export const ViewHub = ({ user, students = [] }) => {
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            // Client-side sort to avoid missing index issues
-            msgs.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
-            setMessages(msgs);
-            // Scroll to bottom
-            setTimeout(() => dummyRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+            try {
+                const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Client-side sort to avoid missing index issues
+                msgs.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+                setMessages(msgs);
+                // Scroll to bottom
+                setTimeout(() => dummyRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+            } catch (error) {
+                console.error("ViewHub messages snapshot error:", error);
+            }
+        }, (error) => {
+            console.error("ViewHub messages listener failed:", error);
         });
 
         return () => unsubscribe();
@@ -95,6 +102,12 @@ export const ViewHub = ({ user, students = [] }) => {
     const handleSendMessage = async (e) => {
         e.preventDefault();
         if (!newMessage.trim()) return;
+
+        // Restriction: Free users cannot chat
+        if (user.subscription?.planId === 'free') {
+            alert("Recurso Exclusivo! Assine um plano para participar da conversa.");
+            return;
+        }
 
         // Restriction: Only Admin can post in Announcement/System channels?
         const channelType = displayChannels.find(c => c.id === activeChannel)?.type;
@@ -109,6 +122,7 @@ export const ViewHub = ({ user, students = [] }) => {
             authorId: user.id,
             authorName: user.name,
             authorAvatar: user.avatar || '👤',
+            authorPhotoUrl: user.photoUrl || null,
             role: user.role,
             createdAt: serverTimestamp(),
             reactions: {}
@@ -165,6 +179,37 @@ export const ViewHub = ({ user, students = [] }) => {
         }
     };
 
+    // Filter out unwanted system channels and apply student class restrictions
+    const filteredChannels = displayChannels.filter(c => {
+        // 1. Hide specific system channels (internal use)
+        if (['novas-aulas', 'desafios'].includes(c.id)) return false;
+
+        // 2. Admins see all remaining channels
+        if (user.role === 'admin' || user.role === 'teacher') return true;
+
+        // 3. Everyone sees generic/public channels
+        if (['quadro-de-avisos', 'geral'].includes(c.id)) return true;
+
+        // 4. Student Logic for Class Channels
+        if (user.role === 'student') {
+            const isClassChannel = /^\d+-ano$/.test(c.id); // Matches "6-ano", "7-ano", etc.
+
+            if (isClassChannel) {
+                if (!user.schoolYear) return false; // No year assigned, see no class channels
+
+                // Normalization: "6º Ano" -> "6"
+                const yearDigit = user.schoolYear.replace(/\D/g, '');
+                // Only allow if channel id matches "6-ano"
+                return c.id === `${yearDigit}-ano`;
+            }
+        }
+
+        // 5. Allow other custom channels (clubs, extra activities) by default
+        return true;
+    });
+
+    const isReadOnly = user.subscription?.planId === 'free';
+
     return (
         <div className="flex h-[calc(100vh-120px)] md:h-[calc(100vh-64px)] bg-white dark:bg-slate-800 rounded-3xl overflow-hidden shadow-xl border border-slate-200 dark:border-slate-700 animate-fadeIn pt-0 md:pt-0 relative z-0">
             {/* Sidebar Channels */}
@@ -185,7 +230,7 @@ export const ViewHub = ({ user, students = [] }) => {
                     )}
                 </div>
                 <div className="flex-1 overflow-y-auto p-2 space-y-2">
-                    {displayChannels.map(ch => (
+                    {filteredChannels.map(ch => (
                         <div key={ch.id} className="relative group/channel">
                             <button
                                 onClick={() => setActiveChannel(ch.id)}
@@ -213,7 +258,7 @@ export const ViewHub = ({ user, students = [] }) => {
                 <div className="py-5 px-4 border-t border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50">
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-slate-200 shrink-0 overflow-hidden relative">
-                            {user?.avatar?.includes('http') ? <img src={user.avatar} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center">👤</div>}
+                            {user?.photoUrl ? <img src={user.photoUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-sm">{user.avatar || '👤'}</div>}
                             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></span>
                         </div>
                         <div className="overflow-hidden hidden md:block lg:block xl:block min-w-0">
@@ -255,7 +300,11 @@ export const ViewHub = ({ user, students = [] }) => {
                                 {/* Avatar (Only for others) */}
                                 {!isMe && (
                                     <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-xl shrink-0 overflow-hidden ${getFrameClass(author?.equipped?.frame)}`}>
-                                        {msg.authorAvatar.includes('http') ? <img src={msg.authorAvatar} alt="av" className="w-full h-full object-cover" /> : msg.authorAvatar}
+                                        {(author?.photoUrl || msg.authorPhotoUrl || (msg.authorAvatar && msg.authorAvatar.includes('http'))) ? (
+                                            <img src={author?.photoUrl || msg.authorPhotoUrl || msg.authorAvatar} alt="av" className="w-full h-full object-cover" />
+                                        ) : (
+                                            author?.avatar || msg.authorAvatar
+                                        )}
                                     </div>
                                 )}
 
@@ -352,7 +401,7 @@ export const ViewHub = ({ user, students = [] }) => {
 
                 {/* Input Area */}
                 <div className="py-3.5 px-4 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 relative">
-                    {showAttach && (
+                    {showAttach && !isReadOnly && (
                         <div className="absolute bottom-16 left-4 bg-white dark:bg-slate-800 rounded-xl shadow-2xl shadow-slate-200/50 dark:shadow-black/50 border border-slate-100 dark:border-slate-700 p-1.5 flex flex-col gap-1 z-30 animate-scaleIn origin-bottom-left min-w-[180px]">
                             <button className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 transition-colors w-full text-left group">
                                 <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-500 group-hover:scale-110 transition-transform">
@@ -371,8 +420,9 @@ export const ViewHub = ({ user, students = [] }) => {
                     <form onSubmit={handleSendMessage} className="relative flex items-center gap-2">
                         <button
                             type="button"
+                            disabled={isReadOnly}
                             onClick={() => setShowAttach(!showAttach)}
-                            className={`p-3 rounded-xl transition-colors ${showAttach ? 'bg-slate-100 text-[#a51a8f]' : 'bg-slate-100 dark:bg-slate-900 text-slate-400 hover:text-[#a51a8f]'}`}
+                            className={`p-3 rounded-xl transition-colors ${showAttach ? 'bg-slate-100 text-[#a51a8f]' : 'bg-slate-100 dark:bg-slate-900 text-slate-400 hover:text-[#a51a8f]'} ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
                             title="Anexar arquivo"
                         >
                             <Paperclip size={20} />
@@ -380,14 +430,15 @@ export const ViewHub = ({ user, students = [] }) => {
                         <div className="relative flex-1">
                             <input
                                 type="text"
-                                placeholder="Enviar mensagem..."
-                                className="w-full bg-slate-100 dark:bg-slate-900 border-none rounded-xl px-4 py-2.5 pr-12 text-slate-800 dark:text-white focus:ring-2 focus:ring-[#a51a8f] focus:outline-none"
+                                disabled={isReadOnly}
+                                placeholder={isReadOnly ? "🔒 Modo Visitante: Assine para participar da conversa" : "Enviar mensagem..."}
+                                className={`w-full bg-slate-100 dark:bg-slate-900 border-none rounded-xl px-4 py-2.5 pr-12 text-slate-800 dark:text-white focus:ring-2 focus:ring-[#a51a8f] focus:outline-none ${isReadOnly ? 'cursor-not-allowed opacity-70' : ''}`}
                                 value={newMessage}
                                 onChange={(e) => setNewMessage(e.target.value)}
                             />
                             <button
                                 type="submit"
-                                disabled={!newMessage.trim()}
+                                disabled={!newMessage.trim() || isReadOnly}
                                 className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-[#a51a8f] disabled:opacity-50 transition-colors"
                             >
                                 <Send size={20} />

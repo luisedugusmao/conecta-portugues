@@ -3,6 +3,7 @@ import { collection, query, where, onSnapshot, addDoc, serverTimestamp } from 'f
 import { db, appId } from '../firebase';
 import { FileCheck, MessageSquare, Check, X, Clock, Gamepad2, CheckCircle, Star, XCircle, ArrowRight, AlertCircle, ChevronRight, RotateCcw, Sparkles, FileText } from 'lucide-react';
 import { getExplanation } from '../services/gemini';
+import { PremiumLock } from '../components/PremiumLock';
 
 export const ViewSimulados = ({ student, quizzes, onCompleteQuiz }) => {
     // Core State
@@ -173,6 +174,29 @@ export const ViewSimulados = ({ student, quizzes, onCompleteQuiz }) => {
                 isTimeout: isTimeout
             });
             if (autoXP > 0) onCompleteQuiz(activeQuiz.id, autoXP, autoCoins);
+
+            // BROADCAST TO FEED (Global Activity)
+            // Only if score is good? Let's say > 70% or just completion
+            if (activeQuiz.questions.length > 0) {
+                const percent = (correctCount / activeQuiz.questions.length) * 100;
+                if (percent >= 70) {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'feed'), {
+                        channel: 'activity-log',
+                        title: '🏆 Novo Campeão!',
+                        content: `Parabéns ${student.name} por completar o simulado "${activeQuiz.title}"!`,
+                        xpEarned: autoXP,
+                        coinsEarned: autoCoins,
+                        quizTitle: activeQuiz.title,
+                        authorId: student.id,
+                        authorName: student.name,
+                        authorAvatar: student.avatar || '👤',
+                        role: 'system',
+                        createdAt: serverTimestamp(),
+                        reactions: {}
+                    });
+                }
+            }
+
         } catch (error) {
             console.error("Error submitting:", error);
             alert("Erro ao salvar resultado. Verifique sua conexão.");
@@ -424,19 +448,21 @@ export const ViewSimulados = ({ student, quizzes, onCompleteQuiz }) => {
                                 </div>
                             )}
 
-                            <button
-                                onClick={() => startQuiz(quiz)}
-                                disabled={isExpired && !isCompleted}
-                                className={`w-full py-3 rounded-xl font-bold transition-colors shadow-lg
+                            <PremiumLock user={student} feature="simulados">
+                                <button
+                                    onClick={() => startQuiz(quiz)}
+                                    disabled={isExpired && !isCompleted}
+                                    className={`w-full py-3 rounded-xl font-bold transition-colors shadow-lg
                                     ${isCompleted || isGraded
-                                        ? 'bg-green-600 text-white hover:bg-green-700'
-                                        : isExpired
-                                            ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
-                                            : 'bg-[#a51a8f] text-white hover:bg-[#8e167b] shadow-[#a51a8f]/20'
-                                    }`}
-                            >
-                                {isGraded ? 'Ver Resultado' : isPending ? 'Aguardar Correção' : isCompleted ? 'Ver Envios' : isExpired ? 'Prazo Esgotado' : 'Começar'}
-                            </button>
+                                            ? 'bg-green-600 text-white hover:bg-green-700'
+                                            : isExpired
+                                                ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                                                : 'bg-[#a51a8f] text-white hover:bg-[#8e167b] shadow-[#a51a8f]/20'
+                                        }`}
+                                >
+                                    {isGraded ? 'Ver Resultado' : isPending ? 'Aguardar Correção' : isCompleted ? 'Ver Envios' : isExpired ? 'Prazo Esgotado' : 'Começar'}
+                                </button>
+                            </PremiumLock>
                         </div>
                     );
                 })}

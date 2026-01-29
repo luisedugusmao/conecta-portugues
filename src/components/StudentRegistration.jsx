@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db, appId } from '../firebase';
 import { User, School, Check, ArrowRight } from 'lucide-react';
+import { Toaster, toast } from 'sonner';
 
 const AVATAR_OPTIONS = [
     '🧑‍🎓', '👩‍🎓', '👨‍🚀', '👩‍🚀', '🦸', '🦸‍♀️',
@@ -13,12 +14,27 @@ export const StudentRegistration = ({ authUser, onComplete }) => {
     const [studentName, setStudentName] = useState('');
     const [selectedAvatar, setSelectedAvatar] = useState('🧑‍🎓');
     const [schoolYear, setSchoolYear] = useState('6º Ano');
+    const [cpf, setCpf] = useState('');
+    const [phone, setPhone] = useState('');
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState(1); // 1: Info, 2: Success
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!studentName.trim()) return;
+
+        // Basic Validation
+        if (!studentName.trim()) {
+            toast.error("Por favor, preencha o nome do aluno.");
+            return;
+        }
+        if (cpf.length < 11) {
+            toast.error("Por favor, preencha o CPF corretamente (11 dígitos).");
+            return;
+        }
+        if (phone.length < 10) {
+            toast.error("Por favor, preencha um telefone válido.");
+            return;
+        }
 
         setLoading(true);
         try {
@@ -30,13 +46,24 @@ export const StudentRegistration = ({ authUser, onComplete }) => {
                 parentName: authUser.displayName || 'Responsável',
                 avatar: selectedAvatar,
                 schoolYear: schoolYear,
+                cpf: cpf.replace(/\D/g, ''), // Ensure only numbers
+                phone: phone.replace(/\D/g, ''), // Ensure only numbers
                 xp: 0,
                 coins: 0,
                 level: 1,
                 role: 'student',
                 createdAt: serverTimestamp(),
                 photoUrl: null, // No custom photo, using avatar
-                onboardingComplete: true
+                onboardingComplete: true,
+                subscription: {
+                    planId: 'free',
+                    status: 'active',
+                    startedAt: new Date().toISOString(),
+                    credits: {
+                        privateClasses: 0,
+                        essayCorrections: 0
+                    }
+                }
             };
 
             await setDoc(userRef, newStudent);
@@ -49,7 +76,7 @@ export const StudentRegistration = ({ authUser, onComplete }) => {
 
         } catch (error) {
             console.error("Error creating profile:", error);
-            alert("Erro ao criar perfil: " + error.message);
+            toast.error("Erro ao criar perfil: " + error.message);
             setLoading(false);
         }
     };
@@ -78,7 +105,7 @@ export const StudentRegistration = ({ authUser, onComplete }) => {
 
                     <div className="p-8 text-center border-b border-white/5">
                         <h1 className="text-2xl font-bold text-white mb-1">Dados do Aluno</h1>
-                        <p className="text-white/60 text-sm">Olá, {authUser.displayName || 'Responsável'}. Escolha um avatar e o nome.</p>
+                        <p className="text-white/60 text-sm">Olá, {authUser.displayName || 'Responsável'}. Preencha os dados abaixo.</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="p-8 space-y-6">
@@ -131,11 +158,51 @@ export const StudentRegistration = ({ authUser, onComplete }) => {
                             </div>
                         </div>
 
+                        {/* Parent Info - Captured for Payments */}
+                        <div className="pt-4 border-t border-white/10 space-y-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="h-px bg-white/10 flex-1"></div>
+                                <span className="text-xs text-white/40 uppercase font-bold tracking-wider">Dados do Responsável</span>
+                                <div className="h-px bg-white/10 flex-1"></div>
+                            </div>
 
+                            <div className="space-y-2">
+                                <label className="text-white/80 text-sm font-medium ml-1">CPF do Responsável (Apenas Números)</label>
+                                <input
+                                    type="text"
+                                    value={cpf}
+                                    onChange={(e) => {
+                                        const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                                        setCpf(val);
+                                    }}
+                                    maxLength={11}
+                                    className="w-full bg-black/20 border border-white/10 rounded-xl py-3 px-4 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all font-medium"
+                                    placeholder="000.000.000-00"
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-white/80 text-sm font-medium ml-1">WhatsApp do Responsável</label>
+                                <input
+                                    type="tel"
+                                    value={phone}
+                                    onChange={(e) => {
+                                        const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                                        setPhone(val);
+                                    }}
+                                    maxLength={11}
+                                    className="w-full bg-black/20 border border-white/10 rounded-xl py-3 px-4 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all font-medium"
+                                    placeholder="(00) 00000-0000"
+                                    required
+                                />
+                                <p className="text-[10px] text-white/40 ml-1">Necessário para geração segura de pagamentos.</p>
+                            </div>
+                        </div>
 
                         <button
                             type="submit"
-                            disabled={loading || !studentName.trim()}
+                            disabled={loading}
                             className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-purple-500/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group"
                         >
                             {loading ? (
@@ -152,6 +219,7 @@ export const StudentRegistration = ({ authUser, onComplete }) => {
 
                 </div>
             </div>
+            <Toaster richColors />
         </div>
     );
 };

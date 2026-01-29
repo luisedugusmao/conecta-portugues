@@ -5,6 +5,7 @@ import { BackgroundPaths } from './BackgroundPaths';
 import { ThemeToggle } from './ThemeToggle';
 import { LogoSVG } from './LogoSVG';
 import { Mail, Lock, User, Chrome, ArrowRight, Loader } from 'lucide-react';
+import { Toaster, toast } from 'sonner';
 
 export const LoginWall = () => {
     const [isRegistering, setIsRegistering] = useState(false);
@@ -48,10 +49,10 @@ export const LoginWall = () => {
             }
         } catch (err) {
             console.error(err);
-            if (err.code === 'auth/invalid-credential') setError('Email ou senha incorretos.');
-            else if (err.code === 'auth/email-already-in-use') setError('Este email já está em uso.');
-            else if (err.code === 'auth/weak-password') setError('A senha deve ter pelo menos 6 caracteres.');
-            else setError('Ocorreu um erro. Tente novamente.');
+            if (err.code === 'auth/invalid-credential') toast.error('Email ou senha incorretos.');
+            else if (err.code === 'auth/email-already-in-use') toast.error('Este email já está em uso.');
+            else if (err.code === 'auth/weak-password') toast.error('A senha deve ter pelo menos 6 caracteres.');
+            else toast.error('Ocorreu um erro. Tente novamente.');
             setLoading(false);
         }
     };
@@ -163,6 +164,7 @@ export const LoginWall = () => {
                     </div>
                 </div>
             </div>
+            <Toaster richColors />
         </BackgroundPaths>
     );
 };

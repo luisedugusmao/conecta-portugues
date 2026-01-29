@@ -3,7 +3,7 @@ import { collection, doc, setDoc, updateDoc, deleteDoc, addDoc, serverTimestamp 
 import { db, appId } from '../firebase';
 import { generateConceptExplanation } from '../services/gemini';
 import {
-    Users, DollarSign, Video, UserPlus, X, Save, Filter, Edit, Copy, Trash2, Paperclip, Link as LinkIcon, FileText, PlayCircle, PlusCircle, CheckSquare, Check, Type, AlignLeft, Plus, ShieldAlert, Home, CalendarDays, LogOut, FileCheck, Star, Clock, Trophy, Sparkles
+    Users, DollarSign, Video, UserPlus, X, Save, Filter, Edit, Copy, Trash2, Paperclip, Link as LinkIcon, FileText, PlayCircle, PlusCircle, CheckSquare, Check, Type, AlignLeft, Plus, ShieldAlert, Home, CalendarDays, LogOut, FileCheck, Star, Clock, Trophy, Sparkles, MessageCircle
 } from 'lucide-react';
 import { LogoSVG } from '../components/LogoSVG';
 import { NavButton, MobileNavButton, StudentCard } from '../components/UIHelpers';
@@ -11,8 +11,10 @@ import { ViewCalendar } from './ViewCalendar';
 import { ViewCorrections } from './ViewCorrections';
 import { ViewFinancial } from './ViewFinancial';
 import { ViewStudentDetails } from './ViewStudentDetails';
+import { ViewHub } from './ViewHub';
 import { getClassStatus, formatDate } from '../utils/classHelpers';
 import { generateNextId } from '../utils/idGenerator';
+import { getPlanDetails } from '../utils/subscriptionConstants';
 
 export const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogout }) => {
     const [currentView, setCurrentView] = useState('overview');
@@ -45,7 +47,14 @@ export const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogo
                 studentPhone: editingStudent.studentPhone || '',
                 parentName: editingStudent.parentName || '',
                 parentEmail: editingStudent.parentEmail || '',
-                parentPhone: editingStudent.parentPhone || ''
+                parentPhone: editingStudent.parentPhone || '',
+                // Update Subscription Plan
+                subscription: {
+                    ...editingStudent.subscription, // Keep existing metadata if any
+                    planId: editingStudent.subscription?.planId || 'free',
+                    status: 'active', // Ensure active if changing
+                    updatedAt: new Date().toISOString()
+                }
             });
             setEditingStudent(null);
             alert('Dados do aluno atualizados!');
@@ -243,6 +252,8 @@ export const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogo
 
     const deleteChallenge = async (id) => { if (confirm("Excluir simulado?")) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'quizzes', id)); };
 
+
+
     const handleEndSeason = async () => {
         if (!confirm("Tem certeza que deseja encerrar o ranking mensal? Isso premiará os Top 3 e zerará o XP Mensal de TODOS.")) return;
 
@@ -285,6 +296,21 @@ export const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogo
                 metadata: { link: '/rank', linkText: 'Ver Novo Ranking' }
             });
 
+            // 5. Notify ALL students
+            const winnerName = top3[0]?.name || 'Ninguém';
+            const notificationPromises = studentsList.map(student =>
+                addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'notifications'), {
+                    recipientId: student.id,
+                    title: '🏆 Ranking Encerrado!',
+                    message: `O ranking mensal chegou ao fim. Parabéns a ${winnerName} pelo 1º lugar!`,
+                    type: 'rank_season_end',
+                    read: false,
+                    createdAt: serverTimestamp(),
+                    link: '/rank'
+                })
+            );
+            await Promise.all(notificationPromises);
+
             alert("Temporada encerrada com sucesso! Prêmios distribuídos e ranking resetado.");
 
         } catch (error) {
@@ -298,7 +324,14 @@ export const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogo
             case 'overview':
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fadeIn">
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4"><div className="p-4 bg-indigo-100 text-indigo-600 rounded-xl"><Users size={24} /></div><div><p className="text-sm text-slate-500">Total de Alunos</p><p className="text-2xl font-bold text-slate-800">{totalStudents}</p></div></div>
+                        <button onClick={() => setCurrentView('students')} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover:bg-slate-50 transition-colors text-left group">
+                            <div className="p-4 bg-indigo-100 text-indigo-600 rounded-xl group-hover:scale-110 transition-transform"><Users size={24} /></div>
+                            <div>
+                                <p className="text-sm text-slate-500">Total de Alunos</p>
+                                <p className="text-2xl font-bold text-slate-800">{totalStudents}</p>
+                                <span className="text-xs text-indigo-600 font-bold">Clique para ver detalhes</span>
+                            </div>
+                        </button>
                         {currentUser.role === 'admin' && (
                             <button onClick={() => setCurrentView('financial')} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover:bg-slate-50 transition-colors text-left group">
                                 <div className="p-4 bg-emerald-100 text-emerald-600 rounded-xl group-hover:scale-110 transition-transform"><DollarSign size={24} /></div>
@@ -313,9 +346,18 @@ export const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogo
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between col-span-1 md:col-span-3">
                             <div className="flex items-center gap-4">
                                 <div className="p-4 bg-yellow-100 text-yellow-600 rounded-xl"><Trophy size={24} /></div>
-                                <div><p className="text-sm text-slate-500">Ranking Mensal</p><p className="text-lg font-bold text-slate-800">Em andamento</p></div>
+                                <div>
+                                    <p className="text-sm text-slate-500">Ranking Mensal</p>
+                                    <p className="text-lg font-bold text-slate-800">Em andamento</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-[10px] text-slate-400 font-medium capitalize">{new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}</p>
+                                        <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold">
+                                            Faltam {Math.ceil((new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0) - new Date()) / (1000 * 60 * 60 * 24))} dias
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
-                            <button onClick={handleEndSeason} className="bg-slate-800 text-white px-6 py-2 rounded-xl font-bold hover:bg-slate-900 transition-colors">Encerrar & Premiar 🏆</button>
+                            <button onClick={handleEndSeason} className="bg-slate-800 text-white px-6 py-2 rounded-xl font-bold hover:bg-slate-900 transition-colors">Encerrar</button>
                         </div>
                     </div>
                 );
@@ -350,6 +392,27 @@ export const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogo
                                             <option value="Outro">Outro</option>
                                         </select>
                                     </div>
+
+                                    <div className="col-span-1 md:col-span-2 bg-purple-50 p-4 rounded-xl border border-purple-100">
+                                        <label className="block text-xs font-bold text-purple-800 uppercase mb-2">Plano de Assinatura</label>
+                                        <select
+                                            value={editingStudent.subscription?.planId || 'free'}
+                                            onChange={(e) => setEditingStudent({
+                                                ...editingStudent,
+                                                subscription: {
+                                                    ...editingStudent.subscription,
+                                                    planId: e.target.value
+                                                }
+                                            })}
+                                            className="w-full border rounded-xl px-4 py-2 bg-white focus:border-[#a51a8f] focus:outline-none text-purple-900 font-medium"
+                                        >
+                                            <option value="free">Visitante (Grátis)</option>
+                                            <option value="basic_group">Conecta Turma</option>
+                                            <option value="standard_personal">Conecta Plus</option>
+                                            <option value="elite_mentorship">Conecta Elite</option>
+                                        </select>
+                                    </div>
+
                                     <select value={editingStudent.schoolYear || '6º Ano'} onChange={(e) => setEditingStudent({ ...editingStudent, schoolYear: e.target.value })} className="border rounded-xl px-4 py-2 bg-slate-50 focus:border-[#a51a8f] focus:outline-none">
                                         <option value="6º Ano">6º Ano</option>
                                         <option value="7º Ano">7º Ano</option>
@@ -379,7 +442,7 @@ export const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogo
                                         <th className="p-4 whitespace-nowrap">Aluno</th>
                                         <th className="p-4 whitespace-nowrap">Série</th>
                                         <th className="p-4 whitespace-nowrap hidden md:table-cell">Responsável</th>
-                                        <th className="p-4 whitespace-nowrap hidden md:table-cell">XP</th>
+                                        <th className="p-4 whitespace-nowrap hidden md:table-cell">Plano</th>
                                         <th className="p-4 text-right whitespace-nowrap">Ações</th>
                                     </tr>
                                 </thead>
@@ -404,7 +467,11 @@ export const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogo
                                                 <p className="text-slate-700">{st.parentName || '-'}</p>
                                                 <p className="text-xs text-slate-400">{st.parentPhone || '-'}</p>
                                             </td>
-                                            <td className="p-4 font-bold text-[#a51a8f] hidden md:table-cell">{st.xp}</td>
+                                            <td className="p-4 font-bold text-[#a51a8f] hidden md:table-cell">
+                                                <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs uppercase">
+                                                    {getPlanDetails(st.subscription?.planId).name}
+                                                </span>
+                                            </td>
                                             <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
                                                 <div className="flex justify-end gap-2">
                                                     <button onClick={() => setEditingStudent(st)} className="p-2 text-slate-400 hover:text-[#a51a8f] hover:bg-slate-100 rounded-lg transition-colors" title="Editar Aluno">
@@ -527,6 +594,8 @@ export const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogo
                 return <ViewCalendar classes={classes} />;
             case 'corrections':
                 return <ViewCorrections students={students} quizzes={quizzes} />;
+            case 'hub':
+                return <ViewHub user={currentUser} students={students} />;
             default:
                 return <div className="text-center py-10 text-slate-400">Em desenvolvimento...</div>;
         }
@@ -534,7 +603,7 @@ export const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogo
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col md:flex-row">
-            <aside className="hidden md:flex flex-col w-64 bg-[#2d1b36] text-white h-screen sticky top-0"><div className="p-6 border-b border-white/10 flex flex-col items-center justify-center"><div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-3xl mb-3">{currentUser.avatar}</div><div className="text-center"><h1 className="font-bold text-lg text-[#eec00a]">{currentUser.name}</h1><p className="text-xs text-white/50 uppercase tracking-widest">{currentUser.role === 'admin' ? 'Diretoria' : 'Professor'}</p></div></div><nav className="flex-1 p-4 space-y-2"><NavButton active={currentView === 'overview'} onClick={() => setCurrentView('overview')} icon={<Home />} label="Visão Geral" dark /><NavButton active={currentView === 'students'} onClick={() => setCurrentView('students')} icon={<Users />} label="Alunos" dark /><NavButton active={currentView === 'classes'} onClick={() => setCurrentView('classes')} icon={<Video />} label="Gestão de Aulas" dark /><NavButton active={currentView === 'challenges'} onClick={() => setCurrentView('challenges')} icon={<FileText />} label="Criar Simulados" dark /><NavButton active={currentView === 'corrections'} onClick={() => setCurrentView('corrections')} icon={<FileCheck />} label="Correções" dark /><NavButton active={currentView === 'calendar'} onClick={() => setCurrentView('calendar')} icon={<CalendarDays />} label="Agenda" dark /></nav><div className="p-4 border-t border-white/10"><button onClick={onLogout} className="flex items-center gap-3 w-full p-3 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-all font-medium text-sm"><LogOut size={18} /> Sair</button></div></aside>
+            <aside className="hidden md:flex flex-col w-64 bg-[#2d1b36] text-white h-screen sticky top-0"><div className="p-6 border-b border-white/10 flex flex-col items-center justify-center"><div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-3xl mb-3">{currentUser.avatar}</div><div className="text-center"><h1 className="font-bold text-lg text-[#eec00a]">{currentUser.name}</h1><p className="text-xs text-white/50 uppercase tracking-widest">{currentUser.role === 'admin' ? 'Diretoria' : 'Professor'}</p></div></div><nav className="flex-1 p-4 space-y-2"><NavButton active={currentView === 'overview'} onClick={() => setCurrentView('overview')} icon={<Home />} label="Visão Geral" dark /><NavButton active={currentView === 'classes'} onClick={() => setCurrentView('classes')} icon={<Video />} label="Gestão de Aulas" dark /><NavButton active={currentView === 'challenges'} onClick={() => setCurrentView('challenges')} icon={<FileText />} label="Criar Simulados" dark /><NavButton active={currentView === 'corrections'} onClick={() => setCurrentView('corrections')} icon={<FileCheck />} label="Correções" dark /><NavButton active={currentView === 'hub'} onClick={() => setCurrentView('hub')} icon={<MessageCircle />} label="Hub & Chat" dark /><NavButton active={currentView === 'calendar'} onClick={() => setCurrentView('calendar')} icon={<CalendarDays />} label="Agenda" dark /></nav><div className="p-4 border-t border-white/10"><button onClick={onLogout} className="flex items-center gap-3 w-full p-3 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-all font-medium text-sm"><LogOut size={18} /> Sair</button></div></aside>
             <main className="flex-1 max-w-5xl mx-auto w-full p-4 md:p-8"><header className="md:hidden flex justify-between items-center mb-6"><div className="w-32"><LogoSVG className="w-full h-auto" /></div><button onClick={onLogout}><LogOut size={20} /></button></header><h2 className="text-2xl font-bold text-slate-800 mb-6 capitalize">{currentView === 'overview' ? 'Visão Geral' : currentView}</h2>{renderContent()}
                 {selectedStudent && (
                     <ViewStudentDetails
@@ -548,10 +617,10 @@ export const AdminDashboard = ({ currentUser, students, classes, quizzes, onLogo
             </main>
             <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 grid grid-cols-6 gap-0.5 px-1 py-1 z-50 pb-safe">
                 <MobileNavButton active={currentView === 'overview'} onClick={() => setCurrentView('overview')} icon={<Home size={18} />} label="Home" compact />
-                <MobileNavButton active={currentView === 'students'} onClick={() => setCurrentView('students')} icon={<Users size={18} />} label="Alunos" compact />
                 <MobileNavButton active={currentView === 'classes'} onClick={() => setCurrentView('classes')} icon={<Video size={18} />} label="Aulas" compact />
                 <MobileNavButton active={currentView === 'challenges'} onClick={() => setCurrentView('challenges')} icon={<FileText size={18} />} label="Simulados" compact />
                 <MobileNavButton active={currentView === 'corrections'} onClick={() => setCurrentView('corrections')} icon={<FileCheck size={18} />} label="Correção" compact />
+                <MobileNavButton active={currentView === 'hub'} onClick={() => setCurrentView('hub')} icon={<MessageCircle size={18} />} label="Hub" compact />
                 <MobileNavButton active={currentView === 'calendar'} onClick={() => setCurrentView('calendar')} icon={<CalendarDays size={18} />} label="Agenda" compact />
             </nav>
         </div>

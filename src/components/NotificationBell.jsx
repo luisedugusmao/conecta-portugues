@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Check, Trash2, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { collection, query, where, onSnapshot, updateDoc, doc, orderBy, limit } from 'firebase/firestore';
 import { db, appId } from '../firebase';
 
-export const NotificationBell = ({ userId, userRole }) => {
+export const NotificationBell = ({ userId, userRole, onNavigate }) => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isOpen, setIsOpen] = useState(false);
+
+    // Refs for manual diffing
+    const lastSeenIds = React.useRef(new Set());
+    const isFirstLoad = React.useRef(true);
 
     useEffect(() => {
         if (!userId) return;
@@ -20,19 +25,65 @@ export const NotificationBell = ({ userId, userRole }) => {
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-            setNotifications(data);
-            setUnreadCount(data.filter(n => !n.read).length);
+            try {
+                const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                setNotifications(data);
+                setUnreadCount(data.filter(n => !n.read).length);
+            } catch (error) {
+                console.error("Notification snapshot error:", error);
+            }
+        }, (error) => {
+            console.error("Notification listener failed:", error);
         });
 
         return () => unsubscribe();
     }, [userId]);
 
-    const markAsRead = async (notif) => {
-        if (notif.read) return;
-        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'notifications', notif.id), {
-            read: true
+    // Separate effect for Toasts to ensure stability and avoid Firestore SDK conflicts
+    useEffect(() => {
+        if (notifications.length === 0) return;
+
+        // On first load, don't toast everything. Mark current IDs as seen.
+        if (isFirstLoad.current) {
+            notifications.forEach(n => lastSeenIds.current.add(n.id));
+            isFirstLoad.current = false;
+            return;
+        }
+
+        // Check for new notifications
+        notifications.forEach(n => {
+            if (!lastSeenIds.current.has(n.id)) {
+                lastSeenIds.current.add(n.id);
+                // Only toast if unread
+                if (!n.read) {
+                    toast(n.title, {
+                        description: n.message,
+                        duration: 4000,
+                    });
+                }
+            }
         });
+    }, [notifications]);
+
+    const handleNotificationClick = async (notif) => {
+        // Mark as read
+        if (!notif.read) {
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'notifications', notif.id), {
+                read: true
+            });
+        }
+
+        // Navigate
+        if (onNavigate && notif.link) {
+            // Check if link is a view name (starts with /)
+            if (notif.link.startsWith('/')) {
+                const view = notif.link.substring(1); // remove /
+                onNavigate(view);
+            } else if (notif.link.startsWith('http')) {
+                window.open(notif.link, '_blank');
+            }
+            setIsOpen(false);
+        }
     };
 
     const markAllRead = async () => {
@@ -49,6 +100,7 @@ export const NotificationBell = ({ userId, userRole }) => {
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                title="Notificações"
             >
                 <Bell className={`w-6 h-6 ${unreadCount > 0 ? 'text-[#a51a8f] animate-pulse-slow' : 'text-slate-500 dark:text-slate-400'}`} />
                 {unreadCount > 0 && (
@@ -81,7 +133,7 @@ export const NotificationBell = ({ userId, userRole }) => {
                                     {notifications.map(notif => (
                                         <div
                                             key={notif.id}
-                                            onClick={() => markAsRead(notif)}
+                                            onClick={() => handleNotificationClick(notif)}
                                             className={`p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors ${!notif.read ? 'bg-[#fdf2fa]/50 dark:bg-[#a51a8f]/5' : ''}`}
                                         >
                                             <div className="flex gap-3">

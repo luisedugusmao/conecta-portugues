@@ -7,15 +7,18 @@ import { BackgroundPaths } from './components/BackgroundPaths';
 import { LogoSVG } from './components/LogoSVG';
 import { LoginWall } from './components/LoginWall';
 import { NavButton, MobileNavButton } from './components/UIHelpers';
+import { Toaster, toast } from 'sonner';
 import { auth, db, appId } from './firebase';
 import {
-  Home, BookOpen, CalendarDays, ClipboardList, LogOut, X, Plus, Trophy, MessageCircle
+  Home, BookOpen, CalendarDays, ClipboardList, LogOut, X, Plus, Trophy, MessageCircle, ArrowLeft
 } from 'lucide-react';
 import { NotificationBell } from './components/NotificationBell';
 import { calculateLevel, getLevelReward } from './utils/levelLogic';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { StudentRegistration } from './components/StudentRegistration';
 import { useClassReminders } from './hooks/useClassReminders';
+import { Modal } from './components/Modal';
+import { GlobalBroadcastListener } from './components/GlobalBroadcastListener';
 
 // Lazy loaded views for performance
 const ViewHome = lazy(() => import('./views/ViewHome').then(module => ({ default: module.ViewHome })));
@@ -59,6 +62,53 @@ const App = () => {
   const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
+    // Payment Success Handler
+    const handlePaymentSuccess = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const isSuccess = params.get('billing_success');
+      const planId = params.get('plan');
+
+      if (isSuccess === 'true' && planId && user) {
+        console.log("Payment confirmed for plan:", planId);
+
+        try {
+          // Import here to avoid circular dependencies if any, though likely fine at top
+          const { SUBSCRIPTION_PLANS } = await import('./utils/subscriptionConstants');
+          const plan = SUBSCRIPTION_PLANS.find(p => p.id === planId);
+
+          if (!plan) throw new Error("Plano inválido no retorno do pagamento.");
+
+          const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', user.id);
+          await updateDoc(userRef, {
+            subscription: {
+              planId: planId,
+              status: 'active',
+              startedAt: new Date().toISOString(),
+              credits: {
+                privateClasses: plan.features.privateClasses,
+                essayCorrections: plan.features.essayCorrections
+              }
+            }
+          });
+
+          // alert(`Pagamento confirmado! Bem-vindo ao plano ${plan.name}. 🚀`);
+          toast.success(`Pagamento confirmado! Bem-vindo ao plano ${plan.name}. 🚀`);
+
+          // Clear URL params
+          window.history.replaceState({}, document.title, window.location.pathname);
+
+        } catch (err) {
+          console.error("Error processing payment success:", err);
+          // alert("Erro ao processar ativação do plano. Contate o suporte.");
+          toast.error("Erro ao processar ativação do plano. Contate o suporte.");
+        }
+      }
+    };
+
+    if (user) handlePaymentSuccess();
+  }, [user]);
+
+  useEffect(() => {
     // Auth Listener
     const unsubscribeAuth = onAuthStateChanged(auth, async (authUser) => {
       setLoading(true);
@@ -71,6 +121,7 @@ const App = () => {
           if (docSnap.exists()) {
             // Student profile exists, load it
             setUser({ id: authUser.uid, ...docSnap.data() });
+            setNewUserAuth(null); // Ensure we clear this if user was previously thought to be new
             setLoading(false);
           } else {
             // NEW USER: No profile found
@@ -103,28 +154,25 @@ const App = () => {
       setStudents(data);
       // Update current user if data changes
       if (user) {
+        // Update local user state if data changes in Firestore (real-time sync)
         const updated = data.find(s => s.id === user.id);
         if (updated) {
-          console.log("Current user data:", updated);
-          console.log("Is Admin Email?", ADMIN_EMAILS.includes(updated.email));
+          // Check if user should be admin based on email, but DO NOT write to DB from here.
+          // Just update local view state if needed, or better yet, rely on the 'role' 
+          // that is already in the document (which should be set manually or via secure backend).
+          // For this "minimal" version, we assume manual promotion in Console for safety, 
+          // OR we allow the view to reflect admin capability if email matches, 
+          // but we do NOT write 'role: admin' to the database to prevent abuse.
 
-          // AUTO-PROMOTE ADMIN
-          // Force lowercase check to avoid sensitive issues
           const isAdminEmail = ADMIN_EMAILS.map(e => e.toLowerCase().trim()).includes(updated.email?.toLowerCase().trim());
-
           if (isAdminEmail && updated.role !== 'admin') {
-            console.log("Promoting user to admin (ATTEMPTING):", updated.email);
-
-            try {
-              const { updateDoc, doc } = await import('firebase/firestore');
-              const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', user.id);
-              await updateDoc(userRef, { role: 'admin' });
-              console.log("SUCCESS: User promoted to admin in Firestore!");
-              updated.role = 'admin'; // Update local immediately
-            } catch (err) {
-              console.error("FAILED to promote user:", err);
-              alert("Erro ao tentar virar admin: " + err.message);
-            }
+            // Just locally verify they are admin for UI purposes
+            // But strictly speaking, we should wait for the DB to say so.
+            // If we want to allow "Auto-Admin" just by email, we can't do it securely client-side 
+            // without writing to DB. 
+            // Compromise: We won't write to DB. We will just let them see Admin Dashboard 
+            // if their email is in the list, overriding the DB role locally.
+            updated.role = 'admin';
           }
           setUser(updated);
         }
@@ -132,10 +180,12 @@ const App = () => {
     });
 
     const qClasses = query(collection(db, 'artifacts', appId, 'public', 'data', 'classes'));
-    const unsubClasses = onSnapshot(qClasses, (snap) => {
+    const unsubClasses = onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'classes')), (snap) => {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       data.sort((a, b) => (a.sortOrder || 99) - (b.sortOrder || 99));
       setClasses(data);
+    }, (error) => {
+      console.error("Classes snapshot error:", error);
     });
 
     const qQuizzes = query(collection(db, 'artifacts', appId, 'public', 'data', 'quizzes'));
@@ -186,7 +236,7 @@ const App = () => {
       const levelsGained = newLevelInfo.level - oldLevelInfo.level;
       rewardCoins = getLevelReward(levelsGained);
       // Ideally show a toast/notification here: `Parabéns! Você subiu para o nível ${newLevelInfo.level} e ganhou ${rewardCoins} estrelas!`
-      alert(`Parabéns! Você subiu para o nível ${newLevelInfo.level} e ganhou ${rewardCoins} estrelas!`);
+      toast.success(`Parabéns! Você subiu para o nível ${newLevelInfo.level} e ganhou ${rewardCoins} estrelas!`);
     }
 
     const quiz = quizzes.find(q => q.id === quizId);
@@ -237,13 +287,17 @@ const App = () => {
             onLogout={handleLogout}
           />
         </Suspense>
+        <Toaster richColors />
       </ErrorBoundary>
     );
+
   }
 
   // Student Layout
   return (
     <div className="flex bg-slate-50 dark:bg-slate-900 min-h-screen font-sans transition-colors duration-300">
+
+      <GlobalBroadcastListener currentUserId={user.id} />
       <SpeedInsights />
       <ThemeToggle />
 
@@ -271,10 +325,19 @@ const App = () => {
         <BackgroundPaths>
           <div className="p-4 md:p-8 max-w-6xl mx-auto min-h-screen">
             {/* Mobile Header */}
+            {/* Mobile Header */}
             <header className="md:hidden flex justify-between items-center mb-6 sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-4 -mx-4 z-20 border-b border-slate-100 dark:border-slate-700">
-              <div className="w-20"><LogoSVG className="w-full h-auto" /></div>
+              <div className="flex items-center gap-3">
+                {currentView !== 'home' ? (
+                  <button onClick={() => setCurrentView('home')} className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+                    <ArrowLeft size={24} />
+                  </button>
+                ) : (
+                  <div className="w-20"><LogoSVG className="w-full h-auto" /></div>
+                )}
+              </div>
               <div className="flex items-center gap-2">
-                <NotificationBell userId={user.id} />
+                <NotificationBell userId={user.id} onNavigate={(view) => setCurrentView(view)} />
                 <button onClick={handleLogout} className="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400">
                   <LogOut size={18} />
                 </button>
@@ -282,7 +345,7 @@ const App = () => {
             </header>
 
             <Suspense fallback={<LoadingScreen />}>
-              {currentView === 'home' && <ViewHome student={user} classes={classes} onOpenRank={() => setShowRank(true)} onOpenStore={() => setShowStore(true)} onOpenProfile={() => setShowProfile(true)} />}
+              {currentView === 'home' && <ViewHome student={user} classes={classes} onOpenRank={() => setShowRank(true)} onOpenStore={() => setShowStore(true)} onOpenProfile={() => setShowProfile(true)} onNavigate={(view) => setCurrentView(view)} />}
               {currentView === 'hub' && <ViewHub user={user} students={students} />}
               {currentView === 'journey' && <ViewJourney classes={classes} />}
               {currentView === 'calendar' && <ViewCalendar classes={classes} />}
@@ -307,18 +370,16 @@ const App = () => {
       </nav>
 
       {/* Rank Modal */}
-      {showRank && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn" onClick={() => setShowRank(false)}>
-          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-slideUp relative" onClick={e => e.stopPropagation()}>
-            <button onClick={() => setShowRank(false)} className="absolute top-4 right-4 p-2 bg-slate-100 dark:bg-slate-700 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white z-10"><X size={20} /></button>
-            <div className="max-h-[80vh] overflow-y-auto p-2">
-              <Suspense fallback={<div className="p-8 text-center text-slate-500">Carregando Ranking...</div>}>
-                <ViewRank students={students} currentStudentId={user.id} />
-              </Suspense>
-            </div>
-          </div>
+      <Modal isOpen={showRank} onClose={() => setShowRank(false)} className="max-w-lg">
+        <div className="absolute top-4 right-4 z-10">
+          <button onClick={() => setShowRank(false)} className="p-2 bg-slate-100 dark:bg-slate-700 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white"><X size={20} /></button>
         </div>
-      )}
+        <div className="max-h-[80vh] overflow-y-auto p-2">
+          <Suspense fallback={<div className="p-8 text-center text-slate-500">Carregando Ranking...</div>}>
+            <ViewRank students={students} currentStudentId={user.id} />
+          </Suspense>
+        </div>
+      </Modal>
 
       {/* Store Modal */}
       {showStore && (
