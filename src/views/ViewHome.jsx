@@ -44,7 +44,7 @@ export const ViewHome = ({ student, classes, onOpenRank, onOpenStore, onOpenProf
                         <Trophy size={18} className="text-[#eec00a]" />
                         <span className="font-bold text-sm">Ranking</span>
                     </button>
-                    <div className="flex items-center gap-2 bg-[#fff9db] dark:bg-yellow-900/30 px-4 py-2 rounded-full border border-[#eec00a] shadow-sm h-12 select-none"><Star className="w-5 h-5 text-[#eec00a] fill-[#eec00a]" /><span className="font-bold text-[#b89508] dark:text-[#eec00a]">{student.coins}</span></div>
+
                     <button onClick={onOpenStore} className="w-12 h-12 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center text-[#a51a8f] hover:scale-105 transition-transform" title="Loja de Itens">
                         <ShoppingBag size={20} />
                     </button>

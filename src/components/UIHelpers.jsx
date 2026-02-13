@@ -16,10 +16,32 @@ export const NavButton = ({ active, onClick, icon, label, dark = false }) => (
 export const MobileNavButton = ({ active, onClick, icon, label, compact = false }) => (
     <button
         onClick={onClick}
-        className={`flex flex-col items-center justify-center w-full rounded-xl transition-all ${active ? 'text-[#a51a8f] bg-[#fdf2fa]' : 'text-slate-400'} ${compact ? 'py-1 gap-0.5' : 'p-2 gap-1'}`}
+        className={`relative flex flex-col items-center justify-center w-full transition-all duration-300 ease-out group
+            ${compact ? 'py-1 gap-0.5' : 'p-2 gap-1'}
+        `}
     >
-        {icon}
-        <span className={`font-bold text-center leading-none ${compact ? 'text-[9px]' : 'text-[10px]'}`}>{label}</span>
+        {/* Icon Container - Round Outline Highlight */}
+        <div className={`
+            flex items-center justify-center transition-all duration-300
+            ${active
+                ? 'w-14 h-14 rounded-full border-2 border-[#a51a8f] text-[#a51a8f] -translate-y-6 bg-white dark:bg-slate-800 shadow-xl shadow-[#a51a8f]/30 ring-4 ring-white/0'
+                : 'w-auto h-auto text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 p-1 rounded-xl'
+            }
+        `}>
+            {React.cloneElement(icon, {
+                size: active ? 28 : 24,
+                strokeWidth: active ? 2.5 : 2,
+                fill: "none" // Ensure no fill for accessibility
+            })}
+        </div>
+
+        {/* Label */}
+        <span className={`font-bold text-center leading-none transition-all duration-300 -mb-1
+            ${active ? 'text-[#a51a8f] opacity-100 -translate-y-4' : 'text-slate-400 opacity-70'}
+            ${compact ? 'text-[9px]' : 'text-[10px]'}
+        `}>
+            {label}
+        </span>
     </button>
 );
 

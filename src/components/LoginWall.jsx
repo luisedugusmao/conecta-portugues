@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 import { BackgroundPaths } from './BackgroundPaths';
 import { ThemeToggle } from './ThemeToggle';
@@ -37,21 +37,30 @@ export const LoginWall = () => {
             if (isRegistering) {
                 // Register
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                // We will handle profile creation in App.jsx based on auth state change
-                // But we can store the display name temporarily or update profile here if we wanted
-                // For now, let App.jsx handle it. We might need to pass the name.
-                // Actually, updateProfile is good practice here.
-                // import { updateProfile } from 'firebase/auth';
-                // await updateProfile(userCredential.user, { displayName: name });
+
+                // Send verification email
+                await sendEmailVerification(userCredential.user);
+
+                // Sign out immediately so they can't access until verified
+                await signOut(auth);
+
+                toast.success('Conta criada! Verifique seu email para entrar.');
+                setIsRegistering(false); // Switch back to login view
             } else {
                 // Login
-                await signInWithEmailAndPassword(auth, email, password);
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+                if (!userCredential.user.emailVerified) {
+                    await signOut(auth);
+                    throw { code: 'auth/email-not-verified' };
+                }
             }
         } catch (err) {
             console.error(err);
             if (err.code === 'auth/invalid-credential') toast.error('Email ou senha incorretos.');
             else if (err.code === 'auth/email-already-in-use') toast.error('Este email já está em uso.');
             else if (err.code === 'auth/weak-password') toast.error('A senha deve ter pelo menos 6 caracteres.');
+            else if (err.code === 'auth/email-not-verified') toast.error('Verifique seu email para entrar.');
             else toast.error('Ocorreu um erro. Tente novamente.');
             setLoading(false);
         }

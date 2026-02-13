@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Sun, Moon } from 'lucide-react';
 
-export const ThemeToggle = () => {
+export const ThemeToggle = ({ floating = true, className = "" }) => {
     const [isDark, setIsDark] = useState(false);
 
     useEffect(() => {
@@ -29,19 +29,23 @@ export const ThemeToggle = () => {
         }
     };
 
+    const containerClasses = floating
+        ? "fixed bottom-24 right-5 md:bottom-6 md:right-6 z-[100] shadow-xl hover:scale-105"
+        : "relative shadow-sm border-slate-100 dark:border-slate-700";
+
     return (
-        <div className="fixed bottom-24 right-5 md:bottom-6 md:right-6 z-50 flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full p-1 shadow-xl hover:scale-105 transition-transform duration-300">
+        <div className={`flex items-center bg-white dark:bg-slate-800 border rounded-full p-0.5 transition-transform duration-300 ${containerClasses} ${className}`}>
             <button
                 onClick={() => setMode('light')}
-                className={`p-2 rounded-full transition-all duration-300 ${!isDark ? 'bg-amber-100 text-amber-500 shadow-sm' : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                className={`p-1.5 rounded-full transition-all duration-300 ${!isDark ? 'bg-amber-100 text-amber-500 shadow-sm' : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
             >
-                <Sun size={18} />
+                <Sun size={14} />
             </button>
             <button
                 onClick={() => setMode('dark')}
-                className={`p-2 rounded-full transition-all duration-300 ${isDark ? 'bg-indigo-100 text-indigo-500 shadow-sm dark:bg-indigo-900/30 dark:text-indigo-300' : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                className={`p-1.5 rounded-full transition-all duration-300 ${isDark ? 'bg-indigo-100 text-indigo-500 shadow-sm dark:bg-indigo-900/30 dark:text-indigo-300' : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
             >
-                <Moon size={18} />
+                <Moon size={14} />
             </button>
         </div>
     );

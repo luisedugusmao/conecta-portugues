@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, doc, updateDoc, onSnapshot, query, increment, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { ThemeToggle } from './components/ThemeToggle';
@@ -60,6 +60,7 @@ const App = () => {
   const [showRank, setShowRank] = useState(false);
   const [showStore, setShowStore] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false); // Controls nav visibility
 
   useEffect(() => {
     // Payment Success Handler
@@ -113,7 +114,19 @@ const App = () => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (authUser) => {
       setLoading(true);
       if (authUser) {
-        // User is logged in, check if profile exists
+        // Enforce Email Verification
+        if (!authUser.emailVerified) {
+          // If the user email is not verified, sign them out and do not load the profile
+          // But only if we aren't in the middle of a registration that sends the email?
+          // If we sign out here, `LoginWall` might lose its reference if not careful.
+          // However, standard security practice is to deny access.
+          await signOut(auth);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
+        // User is logged in and verified, check if profile exists
         const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', authUser.uid);
 
         // We use onSnapshot to get real-time updates of the user profile
@@ -299,7 +312,9 @@ const App = () => {
 
       <GlobalBroadcastListener currentUserId={user.id} />
       <SpeedInsights />
-      <ThemeToggle />
+      <GlobalBroadcastListener currentUserId={user.id} />
+      <SpeedInsights />
+      {/* <ThemeToggle /> removed global floating instance */}
 
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 h-screen sticky top-0 z-30 shadow-sm transition-colors duration-300">
@@ -313,8 +328,9 @@ const App = () => {
           <NavButton active={currentView === 'calendar'} onClick={() => setCurrentView('calendar')} icon={<CalendarDays />} label="Agenda" />
           <NavButton active={currentView === 'simulados'} onClick={() => setCurrentView('simulados')} icon={<ClipboardList />} label="Simulados" />
         </nav>
-        <div className="p-4 border-t border-slate-100 dark:border-slate-700">
-          <button onClick={handleLogout} className="flex items-center gap-3 w-full p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-all font-medium text-sm">
+        <div className="p-4 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center gap-2">
+          <ThemeToggle floating={false} />
+          <button onClick={handleLogout} className="flex-1 flex items-center justify-center gap-2 p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-all font-medium text-sm">
             <LogOut size={18} /> Sair
           </button>
         </div>
@@ -337,6 +353,7 @@ const App = () => {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <ThemeToggle floating={false} className="mr-1" />
                 <NotificationBell userId={user.id} onNavigate={(view) => setCurrentView(view)} />
                 <button onClick={handleLogout} className="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400">
                   <LogOut size={18} />
@@ -349,24 +366,22 @@ const App = () => {
               {currentView === 'hub' && <ViewHub user={user} students={students} />}
               {currentView === 'journey' && <ViewJourney classes={classes} />}
               {currentView === 'calendar' && <ViewCalendar classes={classes} />}
-              {currentView === 'simulados' && <ViewSimulados student={user} quizzes={quizzes} onCompleteQuiz={handleCompleteQuiz} />}
+              {currentView === 'simulados' && <ViewSimulados student={user} quizzes={quizzes} onCompleteQuiz={handleCompleteQuiz} onFullScreenToggle={setIsFullScreen} />}
             </Suspense>
           </div>
         </BackgroundPaths>
       </main>
 
-      {/* Mobile Navigation */}
-      <nav className="md:hidden fixed bottom-4 left-4 right-4 bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-black/40 border border-slate-100 dark:border-slate-700 p-2 flex justify-between items-center z-50 pb-safe">
-        <MobileNavButton active={currentView === 'home'} onClick={() => setCurrentView('home')} icon={<Home size={24} />} label="Início" />
+      {/* Mobile Navigation - Hides when isFullScreen is true */}
+      <nav className={`md:hidden fixed bottom-4 left-4 right-4 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-black/50 border border-white/20 dark:border-white/10 px-6 py-0 h-16 flex justify-between items-center z-50 pb-safe transition-all duration-500 transform ${isFullScreen ? 'translate-y-[150%] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
+        <MobileNavButton active={currentView === 'home'} onClick={() => setCurrentView('home')} icon={<Home />} label="Início" />
 
-        <MobileNavButton active={currentView === 'simulados'} onClick={() => setCurrentView('simulados')} icon={<ClipboardList size={24} />} label="Simulados" />
-        <div className="relative -mt-8">
-          <button onClick={() => setCurrentView('journey')} className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg shadow-[#a51a8f]/40 transition-transform active:scale-95 border-4 border-white dark:border-slate-900 ${currentView === 'journey' ? 'bg-[#eec00a] text-[#7d126b]' : 'bg-[#a51a8f]'}`}>
-            <BookOpen size={24} />
-          </button>
-        </div>
-        <MobileNavButton active={currentView === 'calendar'} onClick={() => setCurrentView('calendar')} icon={<CalendarDays size={24} />} label="Agenda" />
-        <MobileNavButton active={currentView === 'hub'} onClick={() => setCurrentView('hub')} icon={<MessageCircle size={24} />} label="Hub" />
+        <MobileNavButton active={currentView === 'simulados'} onClick={() => setCurrentView('simulados')} icon={<ClipboardList />} label="Simulados" />
+
+        <MobileNavButton active={currentView === 'journey'} onClick={() => setCurrentView('journey')} icon={<BookOpen />} label="Jornada" />
+
+        <MobileNavButton active={currentView === 'calendar'} onClick={() => setCurrentView('calendar')} icon={<CalendarDays />} label="Agenda" />
+        <MobileNavButton active={currentView === 'hub'} onClick={() => setCurrentView('hub')} icon={<MessageCircle />} label="Hub" />
       </nav>
 
       {/* Rank Modal */}

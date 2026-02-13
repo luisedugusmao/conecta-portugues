@@ -6,7 +6,6 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      'react-native': 'react-native-web',
     },
   },
   define: {

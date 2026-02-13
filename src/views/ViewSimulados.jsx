@@ -5,12 +5,23 @@ import { FileCheck, MessageSquare, Check, X, Clock, Gamepad2, CheckCircle, Star,
 import { getExplanation } from '../services/gemini';
 import { PremiumLock } from '../components/PremiumLock';
 
-export const ViewSimulados = ({ student, quizzes, onCompleteQuiz }) => {
+export const ViewSimulados = ({ student, quizzes, onCompleteQuiz, onFullScreenToggle }) => {
     // Core State
     const [activeQuiz, setActiveQuiz] = useState(null);
     const [mySubmissions, setMySubmissions] = useState({});
     const [pendingStartQuiz, setPendingStartQuiz] = useState(null);
     const myChallenges = quizzes.filter(q => !q.assignedTo || q.assignedTo.length === 0 || q.assignedTo.includes(student.id));
+
+    // Full Screen Toggle Effect
+    useEffect(() => {
+        if (onFullScreenToggle) {
+            onFullScreenToggle(!!activeQuiz);
+        }
+        // Cleanup to ensure nav returns if component unmounts
+        return () => {
+            if (onFullScreenToggle) onFullScreenToggle(false);
+        };
+    }, [activeQuiz, onFullScreenToggle]);
 
     // Quiz Execution State
     const [currentQIndex, setCurrentQIndex] = useState(0);
@@ -243,68 +254,115 @@ export const ViewSimulados = ({ student, quizzes, onCompleteQuiz }) => {
         }
 
         // --- TAKING QUIZ MODE ---
-        // Progress Bar
-        const progressPercent = ((currentQIndex + 1) / activeQuiz.questions.length) * 100;
+        // Progress Bar (Segmented)
+        const totalQuestions = activeQuiz.questions.length;
 
         return (
             <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl overflow-hidden min-h-[600px] flex flex-col animate-slideUp relative">
 
-                {/* Header / Top Bar */}
-                <div className="bg-white dark:bg-slate-800 p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center sticky top-0 z-10">
-                    <button onClick={() => { if (confirm("Sair do simulado? Seu progresso será perdido.")) setActiveQuiz(null) }} className="p-2 text-slate-400 hover:text-slate-600"><X /></button>
+                {/* Game Header */}
+                <div className="p-6 flex items-center justify-between bg-white dark:bg-slate-800 z-10">
+                    <button
+                        onClick={() => { if (confirm("Sair do simulado? Seu progresso será perdido.")) setActiveQuiz(null) }}
+                        className="p-2 -ml-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                    >
+                        <ArrowRight className="rotate-180" size={24} />
+                    </button>
 
-                    <div className="flex-1 mx-4 max-w-md">
-                        <div className="flex justify-between text-xs font-bold text-slate-400 mb-1">
-                            <span>Questão {currentQIndex + 1} de {activeQuiz.questions.length}</span>
-                            {timeLeft !== null && <span className={`${timeLeft < 60 ? 'text-red-500 animate-pulse' : ''}`}>{formatTime(timeLeft)}</span>}
-                        </div>
-                        <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                            <div className="h-full bg-[#a51a8f] transition-all duration-500 ease-out" style={{ width: `${progressPercent}%` }}></div>
-                        </div>
+                    {/* Fun Progress Dashes */}
+                    <div className="flex gap-1.5 flex-1 mx-6 justify-center max-w-sm">
+                        {Array.from({ length: totalQuestions }).map((_, idx) => {
+                            let statusColor = "bg-slate-200 dark:bg-slate-700"; // default
+                            if (idx < currentQIndex) statusColor = "bg-[#a51a8f]"; // passed
+                            if (idx === currentQIndex) statusColor = "bg-[#a51a8f] animate-pulse"; // current
+
+                            // If we have answer history, we could color by correct/incorrect, but let's keep it simple "progress" for now
+                            // Or, if (idx < currentQIndex), check if answer was right? 
+                            // The current logic stores answers in `answers` state.
+                            const ans = answers[idx];
+                            if (ans && activeQuiz.questions[idx].answer === ans) statusColor = "bg-green-500";
+                            else if (ans) statusColor = "bg-red-400";
+
+                            return (
+                                <div key={idx} className={`h-2.5 flex-1 rounded-full transition-all duration-500 ${statusColor}`} />
+                            );
+                        })}
                     </div>
 
-                    <div className="w-8"></div> {/* Spacer for centering */}
+                    <div className="flex items-center gap-1.5 bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-bold text-sm">
+                        <div className="w-5 h-5 bg-yellow-400 border-2 border-yellow-200 rounded-full flex items-center justify-center text-[10px] text-white shadow-sm">
+                            $
+                        </div>
+                        {activeQuiz.coinReward || 0}
+                    </div>
                 </div>
 
-                {/* Main Question Area */}
-                <div className="flex-1 p-6 md:p-10 flex flex-col max-w-3xl mx-auto w-full">
+                {/* Main Game Area */}
+                <div className="flex-1 px-6 md:px-12 flex flex-col w-full max-w-4xl mx-auto overflow-y-auto custom-scrollbar">
 
                     {quizState === 'finished' ? (
-                        <div className="text-center py-10 animate-fadeIn">
-                            <div className="w-24 h-24 bg-[#eec00a] rounded-full mx-auto flex items-center justify-center text-5xl mb-6 shadow-lg animate-bounce text-white"><Star size={48} fill="white" /></div>
-                            <h3 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">Simulado Finalizado!</h3>
-                            <p className="text-slate-600 dark:text-slate-300 mb-8">As respostas foram enviadas.</p>
-                            <button onClick={() => setActiveQuiz(null)} className="bg-[#a51a8f] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#8e167b]">Voltar ao Menu</button>
+                        <div className="text-center py-10 animate-fadeIn my-auto">
+                            <div className="w-32 h-32 bg-[#eec00a] rounded-full mx-auto flex items-center justify-center text-6xl mb-6 shadow-[0_10px_40px_-10px_rgba(238,192,10,0.5)] animate-bounce text-white">
+                                <Star size={64} fill="white" />
+                            </div>
+                            <h3 className="text-4xl font-extrabold text-slate-800 dark:text-white mb-3">Simulado Finalizado!</h3>
+                            <p className="text-lg text-slate-600 dark:text-slate-300 mb-10">Você completou todas as questões.</p>
+                            <button onClick={() => finishQuiz()} className="bg-[#a51a8f] text-white px-10 py-4 rounded-2xl font-bold text-lg hover:bg-[#8e167b] shadow-xl shadow-[#a51a8f]/30 hover:scale-105 transition-transform">
+                                Ver Resultado Completo
+                            </button>
                         </div>
                     ) : (
                         <>
-                            {/* Question Text */}
-                            <div className="mb-8">
-                                <h2 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white leading-relaxed">
-                                    <span className="text-[#a51a8f] mr-2">{currentQIndex + 1}.</span>
+                            {/* Question Container */}
+                            <div className="mb-8 mt-4 text-center">
+                                {/* Optional: Space for an image if the question had one */}
+                                {/* <div className="h-40 bg-slate-100 rounded-2xl mb-6 flex items-center justify-center text-slate-400">
+                                    <ImageIcon size={48} />
+                                </div> */}
+
+                                <h2 className="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-white leading-tight mb-4">
                                     {activeQuiz.questions[currentQIndex].q}
                                 </h2>
+
+                                {timeLeft !== null && (
+                                    <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold ${timeLeft < 60 ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-slate-100 text-slate-500'}`}>
+                                        <Clock size={16} /> {formatTime(timeLeft)}
+                                    </div>
+                                )}
                             </div>
 
-                            {/* Options */}
-                            <div className="space-y-3">
+
+                            {/* Options 2x2 Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-20 md:mb-8">
                                 {activeQuiz.questions[currentQIndex].options.map((opt, idx) => {
                                     const isSelected = currentSelectedOption === opt;
                                     const isFeedbackMode = quizState === 'feedback';
                                     const isCorrect = activeQuiz.questions[currentQIndex].answer === opt;
 
-                                    let cardStyle = "border-slate-200 dark:border-slate-700 hover:border-[#a51a8f]/50 hover:bg-slate-50 dark:hover:bg-slate-700/50";
+                                    // Fun Colors for A, B, C, D
+                                    const colors = [
+                                        { border: 'border-purple-200', bg: 'bg-purple-50', text: 'text-purple-600', letterBg: 'bg-purple-100' }, // A
+                                        { border: 'border-blue-200', bg: 'bg-blue-50', text: 'text-blue-600', letterBg: 'bg-blue-100' },     // B
+                                        { border: 'border-green-200', bg: 'bg-green-50', text: 'text-green-600', letterBg: 'bg-green-100' },   // C
+                                        { border: 'border-orange-200', bg: 'bg-orange-50', text: 'text-orange-600', letterBg: 'bg-orange-100' }, // D
+                                    ];
+                                    const theme = colors[idx % 4];
 
-                                    if (isSelected && !isFeedbackMode) {
-                                        cardStyle = "border-[#a51a8f] bg-[#fdf2fa] dark:bg-[#a51a8f]/20 text-[#a51a8f] dark:text-[#d36ac1] ring-1 ring-[#a51a8f]";
-                                    } else if (isFeedbackMode) {
+                                    let cardClasses = `relative p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer flex items-center gap-4 group hover:scale-[1.02] active:scale-95 `;
+
+                                    if (isFeedbackMode) {
                                         if (isCorrect) {
-                                            cardStyle = "border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 ring-1 ring-green-500";
+                                            cardClasses += "border-green-500 bg-green-100 dark:bg-green-900/30 ring-2 ring-green-500 ring-offset-2 dark:ring-offset-slate-800";
                                         } else if (isSelected && !isCorrect) {
-                                            cardStyle = "border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400";
+                                            cardClasses += "border-red-500 bg-red-100 dark:bg-red-900/30 opacity-80";
                                         } else {
-                                            cardStyle = "border-slate-100 dark:border-slate-800 opacity-50"; // Dim others
+                                            cardClasses += "border-slate-100 dark:border-slate-700 opacity-40 grayscale";
                                         }
+                                    } else if (isSelected) {
+                                        cardClasses += `border-[#a51a8f] bg-[#fdf2fa] shadow-md ring-1 ring-[#a51a8f]`;
+                                    } else {
+                                        // Default "Fun" State
+                                        cardClasses += `${theme.border} bg-white dark:bg-slate-800 dark:border-slate-700 hover:shadow-lg hover:border-[#a51a8f]/60`;
                                     }
 
                                     return (
@@ -312,56 +370,55 @@ export const ViewSimulados = ({ student, quizzes, onCompleteQuiz }) => {
                                             key={idx}
                                             onClick={() => handleOptionSelect(opt)}
                                             disabled={isFeedbackMode}
-                                            className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 flex items-center justify-between group ${cardStyle}`}
+                                            className={cardClasses}
                                         >
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors
-                                                   ${isSelected || (isFeedbackMode && isCorrect) ? 'border-current' : 'border-slate-300 text-slate-400 group-hover:border-slate-400'}
-                                               `}>
-                                                    {String.fromCharCode(65 + idx)}
-                                                </div>
-                                                <span className="font-medium">{opt}</span>
+                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl font-black shadow-sm transition-colors
+                                                ${isSelected || (isFeedbackMode && isCorrect)
+                                                    ? 'bg-[#a51a8f] text-white'
+                                                    : `${theme.letterBg} ${theme.text} group-hover:bg-[#a51a8f] group-hover:text-white`
+                                                }
+                                            `}>
+                                                {String.fromCharCode(65 + idx)}
                                             </div>
-                                            {isFeedbackMode && isCorrect && <CheckCircle className="text-green-500" size={20} />}
-                                            {isFeedbackMode && isSelected && !isCorrect && <XCircle className="text-red-500" size={20} />}
+                                            <span className={`font-bold text-lg text-left leading-snug flex-1 ${isSelected ? 'text-[#a51a8f]' : 'text-slate-700 dark:text-slate-200'}`}>
+                                                {opt}
+                                            </span>
+
+                                            {isFeedbackMode && isCorrect && <CheckCircle className="text-green-600 absolute top-4 right-4" size={24} fill="white" />}
+                                            {isFeedbackMode && isSelected && !isCorrect && <XCircle className="text-red-500 absolute top-4 right-4" size={24} fill="white" />}
                                         </button>
                                     );
                                 })}
                             </div>
 
-                            {/* Feedback Section */}
+                            {/* Feedback Overlay / Section */}
                             {quizState === 'feedback' && (
-                                <div className={`mt-6 p-4 rounded-2xl animate-fadeSlideUp ${feedbackStatus === 'correct' ? 'bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'}`}>
-                                    <div className="flex items-start gap-3">
-                                        <div className={`p-2 rounded-full ${feedbackStatus === 'correct' ? 'bg-green-200 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                            {feedbackStatus === 'correct' ? <Check size={20} /> : <X size={20} />}
+                                <div className="mb-6 animate-slideUp">
+                                    <div className={`p-5 rounded-2xl flex flex-col md:flex-row gap-4 items-start ${feedbackStatus === 'correct' ? 'bg-green-100 dark:bg-green-900/40 text-green-900 dark:text-green-100' : 'bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-100'}`}>
+                                        <div className={`p-3 rounded-full shrink-0 ${feedbackStatus === 'correct' ? 'bg-green-200 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                            {feedbackStatus === 'correct' ? <Check size={24} /> : <X size={24} />}
                                         </div>
                                         <div className="flex-1">
-                                            <h4 className={`font-bold text-lg mb-2 ${feedbackStatus === 'correct' ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300'}`}>
-                                                {feedbackStatus === 'correct' ? 'Isso mesmo!' : 'Resposta incorreta'}
+                                            <h4 className="font-bold text-xl mb-1">
+                                                {feedbackStatus === 'correct' ? 'Boa! Continue assim!' : 'Ah não... Resposta errada.'}
                                             </h4>
 
                                             {feedbackStatus === 'incorrect' && (
-                                                <p className="mb-3 text-slate-700 dark:text-slate-300">
-                                                    A resposta correta é: <strong className="text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded">{activeQuiz.questions[currentQIndex].answer}</strong>
-                                                </p>
+                                                <div className="mb-2 p-3 bg-white/50 dark:bg-black/20 rounded-xl inline-block">
+                                                    <span className="text-sm font-bold opacity-70 block mb-1">Gabarito:</span>
+                                                    <span className="font-bold text-lg">{activeQuiz.questions[currentQIndex].answer}</span>
+                                                </div>
                                             )}
 
-                                            <p className={`text-sm leading-relaxed ${feedbackStatus === 'correct' ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}`}>
+                                            <div className="text-base opacity-90 leading-relaxed mt-2 p-3 bg-white/40 dark:bg-black/10 rounded-xl">
                                                 {isLoadingAI ? (
-                                                    <span className="flex items-center gap-2 opacity-75 animate-pulse"><Sparkles size={14} /> Gerando explicação inteligente...</span>
+                                                    <p className="flex items-center gap-2"><Sparkles size={16} className="animate-spin" /> O professor IA está escrevendo uma dica...</p>
                                                 ) : (
-                                                    aiExplanation || activeQuiz.questions[currentQIndex].explanation ||
-                                                    (feedbackStatus === 'correct'
-                                                        ? "Excelente! A análise confirma que sua lógica está correta. O contexto foi bem aplicado."
-                                                        : "A alternativa selecionada não corresponde ao padrão esperado para esta questão. Revise os conceitos gramaticais relacionados.")
+                                                    <div className="flex gap-2">
+                                                        <Sparkles size={18} className="shrink-0 mt-1 opacity-70" />
+                                                        <p>{aiExplanation || activeQuiz.questions[currentQIndex].explanation || (feedbackStatus === 'correct' ? "Você mandou bem na lógica!" : "Revise este tópico com atenção.")}</p>
+                                                    </div>
                                                 )}
-                                            </p>
-
-                                            {/* Subtly indicating AI analysis without a full block header */}
-                                            <div className="mt-2 flex items-center gap-1 opacity-60">
-                                                <Sparkles size={12} />
-                                                <span className="text-[10px] uppercase tracking-wide font-bold">Análise Inteligente</span>
                                             </div>
                                         </div>
                                     </div>
@@ -372,23 +429,25 @@ export const ViewSimulados = ({ student, quizzes, onCompleteQuiz }) => {
                     )}
                 </div>
 
-                {/* Footer Actions */}
+                {/* Footer Action Bar */}
                 {quizState !== 'finished' && (
-                    <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex justify-end">
+                    <div className="p-4 md:p-6 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 flex justify-center sticky bottom-0 z-20">
                         {quizState === 'answering' ? (
                             <button
                                 onClick={handleVerifyAnswer}
                                 disabled={!currentSelectedOption}
-                                className="bg-[#a51a8f] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#8e167b] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-[#a51a8f]/20 flex items-center gap-2"
+                                className="w-full md:max-w-md bg-[#a51a8f] text-white py-4 rounded-2xl font-black text-lg hover:bg-[#8e167b] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all shadow-xl shadow-[#a51a8f]/20 hover:scale-[1.02] active:scale-95 uppercase tracking-wide flex items-center justify-center gap-3"
                             >
-                                Verificar <Check size={18} />
+                                Verificar Resposta <CheckCircle size={24} className="opacity-50" />
                             </button>
                         ) : (
                             <button
                                 onClick={handleNextQuestion}
-                                className="bg-slate-800 dark:bg-white dark:text-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-700 dark:hover:bg-slate-200 transition-all shadow-lg flex items-center gap-2"
+                                className={`w-full md:max-w-md py-4 rounded-2xl font-black text-lg transition-all shadow-xl hover:scale-[1.02] active:scale-95 uppercase tracking-wide flex items-center justify-center gap-3
+                                    ${feedbackStatus === 'correct' ? 'bg-green-500 hover:bg-green-600 text-white shadow-green-500/30' : 'bg-slate-800 hover:bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-slate-500/30'}
+                                `}
                             >
-                                {currentQIndex < activeQuiz.questions.length - 1 ? 'Próxima Questão' : 'Finalizar Simulado'} <ArrowRight size={18} />
+                                {currentQIndex < activeQuiz.questions.length - 1 ? 'Continuar' : 'Ver Resultados'} <ArrowRight size={24} />
                             </button>
                         )}
                     </div>

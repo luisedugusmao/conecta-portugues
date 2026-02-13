@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db, appId } from '../firebase';
-import { User, School, Check, ArrowRight } from 'lucide-react';
+import { User, School, Check, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 
 const AVATAR_OPTIONS = [
@@ -18,6 +18,19 @@ export const StudentRegistration = ({ authUser, onComplete }) => {
     const [phone, setPhone] = useState('');
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState(1); // 1: Info, 2: Success
+    const scrollContainerRef = useRef(null);
+
+    const scrollLeft = () => {
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+        }
+    };
+
+    const scrollRight = () => {
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -113,17 +126,37 @@ export const StudentRegistration = ({ authUser, onComplete }) => {
                         {/* Avatar Selection */}
                         <div className="space-y-2">
                             <label className="text-white/80 text-sm font-medium ml-1">Escolha um Avatar</label>
-                            <div className="grid grid-cols-6 gap-2">
-                                {AVATAR_OPTIONS.map((avatar) => (
-                                    <button
-                                        key={avatar}
-                                        type="button"
-                                        onClick={() => setSelectedAvatar(avatar)}
-                                        className={`aspect-square flex items-center justify-center text-2xl rounded-xl transition-all ${selectedAvatar === avatar ? 'bg-purple-600 shadow-lg shadow-purple-500/40 scale-110' : 'bg-white/5 hover:bg-white/10'}`}
-                                    >
-                                        {avatar}
-                                    </button>
-                                ))}
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={scrollLeft}
+                                    className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+                                >
+                                    <ChevronLeft size={20} />
+                                </button>
+                                <div
+                                    ref={scrollContainerRef}
+                                    className="flex gap-3 overflow-x-auto scroll-smooth py-4 px-2 -mx-2"
+                                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                                >
+                                    {AVATAR_OPTIONS.map((avatar) => (
+                                        <button
+                                            key={avatar}
+                                            type="button"
+                                            onClick={() => setSelectedAvatar(avatar)}
+                                            className={`flex-shrink-0 w-12 h-12 flex items-center justify-center text-2xl rounded-xl transition-all ${selectedAvatar === avatar ? 'bg-purple-600 shadow-lg shadow-purple-500/40 scale-110 ring-2 ring-purple-400/50' : 'bg-white/5 hover:bg-white/10'}`}
+                                        >
+                                            {avatar}
+                                        </button>
+                                    ))}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={scrollRight}
+                                    className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+                                >
+                                    <ChevronRight size={20} />
+                                </button>
                             </div>
                         </div>
 
